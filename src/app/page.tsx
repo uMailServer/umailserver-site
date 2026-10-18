@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Icon, StepLabel } from '@/components/icons';
 import { MailDiagram, Pipeline } from '@/components/mail-diagram';
 import { CopyButton, InstallTabs } from '@/components/interactive';
+import { HeroBackground } from '@/components/hero-background';
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 const repo = 'https://github.com/uMailServer/uMailServer';
 const features = [
@@ -55,59 +56,62 @@ const faqs = [
 export default function Home() {
   return (
     <main id="main">
-      <section className="hero container">
-        <div className="hero-copy">
-          <a className="release-pill" href={`${repo}#readme`}>
-            <span className="status-dot" />
-            <span>v0.1.0 beta</span>
-            <span className="pill-divider" />A fresh take on self-hosted mail
-            <Icon name="arrow" size={14} />
-          </a>
-          <h1>
-            One binary.
-            <br />
-            <span>Complete email.</span>
-          </h1>
-          <p className="hero-lead">
-            Your mail.
-            <br />
-            Your infrastructure.
-          </p>
-          <p className="hero-description">
-            Stop stitching services together. SMTP, IMAP, webmail and spam protection — one cohesive
-            mail server, written in Go.
-          </p>
-          <div className="hero-buttons">
-            <Link href="/docs/getting-started/" className="button primary">
-              Start building <Icon name="arrow" size={18} />
-            </Link>
-            <a href={repo} className="button secondary">
-              <Icon name="github" size={18} />
-              Explore the source
-              <Icon name="external" size={15} />
+      <section className="hero-scene" data-mail-scene="">
+        <HeroBackground />
+        <div className="hero container">
+          <div className="hero-copy" data-scene-protect="0.13">
+            <a className="release-pill" href={`${repo}#readme`}>
+              <span className="status-dot" />
+              <span>v0.1.0 beta</span>
+              <span className="pill-divider" />A fresh take on self-hosted mail
+              <Icon name="arrow" size={14} />
             </a>
+            <h1>
+              One binary.
+              <br />
+              <span>Complete email.</span>
+            </h1>
+            <p className="hero-lead">
+              Your mail.
+              <br />
+              Your infrastructure.
+            </p>
+            <p className="hero-description">
+              Stop stitching services together. SMTP, IMAP, webmail and spam protection — one
+              cohesive mail server, written in Go.
+            </p>
+            <div className="hero-buttons">
+              <Link href="/docs/getting-started/" className="button primary">
+                Start building <Icon name="arrow" size={18} />
+              </Link>
+              <a href={repo} className="button secondary">
+                <Icon name="github" size={18} />
+                Explore the source
+                <Icon name="external" size={15} />
+              </a>
+            </div>
+            <div className="hero-command">
+              <span className="terminal-prompt">❯</span>
+              <code>umailserver serve</code>
+              <CopyButton text="umailserver serve" />
+            </div>
+            <div className="hero-checks">
+              <span>
+                <Icon name="check" size={13} />
+                Open source · AGPL-3.0
+              </span>
+              <span>
+                <Icon name="check" size={13} />
+                Pure Go
+              </span>
+              <span>
+                <Icon name="check" size={13} />
+                Self-hosted
+              </span>
+            </div>
           </div>
-          <div className="hero-command">
-            <span className="terminal-prompt">❯</span>
-            <code>umailserver serve</code>
-            <CopyButton text="umailserver serve" />
-          </div>
-          <div className="hero-checks">
-            <span>
-              <Icon name="check" size={13} />
-              Open source · AGPL-3.0
-            </span>
-            <span>
-              <Icon name="check" size={13} />
-              Pure Go
-            </span>
-            <span>
-              <Icon name="check" size={13} />
-              Self-hosted
-            </span>
-          </div>
+          <MailDiagram />
         </div>
-        <MailDiagram />
       </section>
       <div className="stack-strip">
         <div className="container">

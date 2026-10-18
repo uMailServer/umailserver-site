@@ -1,6 +1,6 @@
 export function MailDiagram() {
   return (
-    <div className="mail-diagram">
+    <div className="mail-diagram" data-scene-protect="0.42">
       <div className="diagram-overline">
         <span>
           <i /> ALL SYSTEMS. ONE BINARY.
@@ -51,17 +51,6 @@ export function MailDiagram() {
           <path d="M527 155v65l-91 46" />
           <path d="m194 363 68-34" />
           <path d="m449 326 83 41v47" />
-        </g>
-        <g className="mail-packets" fill="var(--cyan)">
-          <circle r="3">
-            <animateMotion dur="6s" repeatCount="indefinite" path="M170 166v66l103 51" />
-          </circle>
-          <circle r="3">
-            <animateMotion dur="7s" repeatCount="indefinite" path="M436 266l91-46v-65" />
-          </circle>
-          <circle r="3">
-            <animateMotion dur="8s" repeatCount="indefinite" path="M449 326l83 41v47" />
-          </circle>
         </g>
         <g filter="url(#server-shadow)">
           <path

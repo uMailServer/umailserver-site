@@ -22,12 +22,13 @@ The development server binds to `127.0.0.1:3000` by default.
 
 ```sh
 npm run typecheck
+npm test
 npm run build
 npm run check:export
 npm run preview
 ```
 
-Preview: http://127.0.0.1:4173. `scripts/serve.mjs` serves the actual `out/` files, including nested routes and a real 404 response. It is a development preview, not a production server.
+Preview: http://127.0.0.1:4173. Set `PORT` to use a different free port (for example, `$env:PORT='4185'; npm run preview` in PowerShell). `scripts/serve.mjs` serves the actual `out/` files, including nested routes and a real 404 response. It is a development preview, not a production server.
 
 `check:export` checks every HTML file for a title, a single h1 and local link/asset targets, then verifies canonical URLs, descriptions, robots, sitemap, CNAME, social assets and `.nojekyll`.
 
@@ -37,6 +38,9 @@ Preview: http://127.0.0.1:4173. `scripts/serve.mjs` serves the actual `out/` fil
 - `src/app/docs/`: overview, quick start, architecture, deployment, security and current limitations.
 - `src/app/brand/`: downloadable SVG identity.
 - `src/components/`: shared identity, diagrams, navigation, theme picker, copy buttons and installation tabs.
+- `src/components/hero-background.tsx`: independent client-side, full-width Canvas 2D mail fabric and its lifecycle.
+- `src/lib/mail-scene.ts`: centralized motion/color budgets, mail simulation, tap recognition, rendering and cancellable RAF loop.
+- `tests/mail-scene.test.mjs`: native Node tests for effect limits, lifetime, timing, reduced motion, input filtering and scheduling.
 - `src/app/globals.css`: central theme, container, gutter, spacing, typography and breakpoint tokens. Main containers cap at 1720px.
 - `public/`: SVG sources, raster social/apple icons, custom domain and Pages files.
 - `docs/RESEARCH.md`: product sources and content decisions.
@@ -45,6 +49,16 @@ Preview: http://127.0.0.1:4173. `scripts/serve.mjs` serves the actual `out/` fil
 The web UI illustration is explicitly conceptual. It is not a screenshot. No testimonial, benchmark, customer count or delivery guarantee is presented.
 
 The theme picker follows CobaltDB's three interface previews, native Light/Dark/System radio controls, selected checkmark, status copy and keyboard/focus behavior. The Oxog studio card follows NineDeploy's rounded panel, ambient pink/purple accents, original four-path symbol and project links. Its signature draws on viewport entry over 1.6 seconds with .25/.5/.9-second path delays. Reduced-motion CSS disables decorative motion, transitions and smooth scrolling; the complete logo and content remain visible without JavaScript.
+
+## Hero mail fabric
+
+The entire hero section carries curved mail routes and drifting envelope packets. Pointer effects are local; empty-area taps create one of three related delivery signals. Text, links and controls are excluded from click effects. Passive pointer listeners reject scrolling, dragging and long presses rather than intercepting touch scrolling.
+
+`MAIL_SCENE` centralizes populations, speeds, pointer radii, theme palettes, signal lifetimes and drawing budgets. Populations are capped at 24/48/72 packets; at most six 1.65-second signals coexist. Canvas backing storage is capped at 3.2 million pixels and DPR 1.75. These are configured limits, not benchmark results.
+
+The RAF chain stops when the hero is offscreen, the document is hidden, the user pauses motion, or reduced motion is enabled. Resume starts with zero elapsed delta. Idle rendering uses a lower frame-rate limit and intensity. Reduced motion draws a static fabric; without Canvas or JavaScript, the CSS background and server-rendered content remain usable. No animation dependency is added and no React state is updated per frame.
+
+The old animated SVG packets inside the small illustration were removed so all continuous hero motion belongs to the same pausable lifecycle. The illustration itself remains an accessible, static SVG.
 
 `og.png`, its compatibility copy `social.png`, and the apple icon are checked in so CI does not need asset generation. Open Graph and Twitter metadata use `/og.png` (1200×630). To regenerate them after changing the corresponding SVG sources, run `node scripts/generate-assets.mjs` with the installed dependencies (Next.js supplies Sharp).
 

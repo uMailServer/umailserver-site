@@ -30,6 +30,16 @@ The updated components were checked against the live CobaltDB theme panel and li
 - Oxog logo state changing from `waiting` to `drawing` on viewport entry, four 1.6-second path animations with 0/.25/.5/.9-second delays, and completed paths at zero dash offset.
 - Desktop and mobile screenshots of the panel and studio card. Reduced-motion behavior is implemented in both the observer and CSS; OS media emulation remains unavailable through the selected browser controls.
 
+## Interactive full-width hero
+
+- Nine native Node behavioral tests pass: 1,000-click bounded stress, nearby-click merging and expiry, 60/120Hz timing equivalence, local pointer response and exit settling, static reduced-motion mode, mobile/4K backing budgets, single-chain RAF pause/resume/disposal, tap-versus-scroll/drag/long-press filtering, and theme interpolation.
+- Production export passes with 10 HTML files and 299 internal links/assets. The client component adds no dependency and preserves static export.
+- Browser matrix: 375, 768, 1024, 1440, 1920, 2560 and 3840px in both themes. All 14 cases fill the full hero width, have no horizontal document overflow, and remain below the 3.2M-pixel backing budget. Mobile uses 24 packets; the widest scene uses 72.
+- Browser interaction checks: empty-area taps produce short-lived bursts; repeated taps remain bounded; copy/pause/resume controls do not increment background interactions; signals return to zero; a fully offscreen hero reports paused and resumes when returned to view. Mobile navigation and the real getting-started CTA work, removing the canvas on route exit.
+- Live browser logs on exercised paths contain no errors or warnings. Mobile, desktop and 4K screenshots were reviewed.
+- Reduced-motion simulation and RAF cancellation are exercised by engine/scheduler tests. OS reduced-motion emulation is unavailable through this browser, and its background tabs stay `visible`, so native OS preference and hidden-tab transitions are source-checked rather than claimed as live browser passes. The explicit pause control and offscreen pause were exercised in the browser.
+- Preview used isolated port 4185; another project's existing server on 4173 was left alone.
+
 ## Publication boundary
 
 Repository and GitHub Pages workflow have been prepared. GitHub Pages custom domain is set to `umailserver.com`.
