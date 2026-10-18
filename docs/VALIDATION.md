@@ -15,6 +15,7 @@
 - Theme selection, reload persistence, Escape-to-trigger focus, mobile navigation opening/closing and anchor navigation exercised.
 - Installation method tabs exercised by click and keyboard arrow; source command copying confirmed through rendered “Copied!” feedback and exact browser clipboard contents.
 - FAQ disclosure exercised. Browser error/warning log returned no entries on the exercised paths.
+- Light-theme muted text and teal text tokens were checked against their light surfaces and darkened to exceed 4.5:1 for normal text.
 - Reduced-motion rules reviewed in source: disable decorative CSS animations/transitions, smooth scroll, signature drawing and hide moving SVG mail packets. OS reduced-motion emulation was not available through the selected browser controls, so that media mode is source-checked rather than runtime-certified.
 
 After the initial matrix, the incoming-mail diagram's route label was corrected to “Sieve · local delivery” to avoid implying every inbound message enters the outgoing queue. Mobile documentation links were enlarged. Production build and export checks were rerun.
