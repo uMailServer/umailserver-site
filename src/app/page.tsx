@@ -3,7 +3,6 @@ import type { Metadata } from 'next';
 import { Icon, StepLabel } from '@/components/icons';
 import { MailDiagram, Pipeline } from '@/components/mail-diagram';
 import { CopyButton, InstallTabs } from '@/components/interactive';
-import { HeroBackground } from '@/components/hero-background';
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 const repo = 'https://github.com/uMailServer/uMailServer';
 const features = [
@@ -56,10 +55,9 @@ const faqs = [
 export default function Home() {
   return (
     <main id="main">
-      <section className="hero-scene" data-mail-scene="">
-        <HeroBackground />
+      <section className="hero-scene">
         <div className="hero container">
-          <div className="hero-copy" data-scene-protect="0.13">
+          <div className="hero-copy" data-scene-protect="">
             <a className="release-pill" href={`${repo}#readme`}>
               <span className="status-dot" />
               <span>v0.1.0 beta</span>

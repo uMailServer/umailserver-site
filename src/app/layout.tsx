@@ -4,6 +4,7 @@ import '@fontsource/ibm-plex-mono/400.css';
 import './globals.css';
 import { Header, MotionObserver } from '@/components/interactive';
 import { Footer } from '@/components/footer';
+import { SiteBackground } from '@/components/site-background';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://umailserver.com'),
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a className="skip-link" href="#main">
           Skip to content
         </a>
+        <SiteBackground />
         <Header />
         {children}
         <Footer />

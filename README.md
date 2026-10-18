@@ -38,9 +38,9 @@ Preview: http://127.0.0.1:4173. Set `PORT` to use a different free port (for exa
 - `src/app/docs/`: overview, quick start, architecture, deployment, security and current limitations.
 - `src/app/brand/`: downloadable SVG identity.
 - `src/components/`: shared identity, diagrams, navigation, theme picker, copy buttons and installation tabs.
-- `src/components/hero-background.tsx`: independent client-side, full-width Canvas 2D mail fabric and its lifecycle.
-- `src/lib/mail-scene.ts`: centralized motion/color budgets, mail simulation, tap recognition, rendering and cancellable RAF loop.
-- `tests/mail-scene.test.mjs`: native Node tests for effect limits, lifetime, timing, reduced motion, input filtering and scheduling.
+- `src/components/site-background.tsx`: reusable, site-wide SVG ambient layer, content masks and input/lifecycle handling.
+- `src/lib/ambient-scene.ts`: deterministic world geometry, density/effect budgets, local forces, tap recognition and cancellable RAF loop.
+- `tests/ambient-scene.test.mjs`: native Node tests for effect limits, lifetime, timing, reduced motion, input filtering and scheduling.
 - `src/app/globals.css`: central theme, container, gutter, spacing, typography and breakpoint tokens. Main containers cap at 1720px.
 - `public/`: SVG sources, raster social/apple icons, custom domain and Pages files.
 - `docs/RESEARCH.md`: product sources and content decisions.
@@ -50,15 +50,17 @@ The web UI illustration is explicitly conceptual. It is not a screenshot. No tes
 
 The theme picker follows CobaltDB's three interface previews, native Light/Dark/System radio controls, selected checkmark, status copy and keyboard/focus behavior. The Oxog studio card follows NineDeploy's rounded panel, ambient pink/purple accents, original four-path symbol and project links. Its signature draws on viewport entry over 1.6 seconds with .25/.5/.9-second path delays. Reduced-motion CSS disables decorative motion, transitions and smooth scrolling; the complete logo and content remain visible without JavaScript.
 
-## Hero mail fabric
+## Site-wide SVG background
 
-The entire hero section carries curved mail routes and drifting envelope packets. Pointer effects are local; empty-area taps create one of three related delivery signals. Text, links and controls are excluded from click effects. Passive pointer listeners reject scrolling, dragging and long presses rather than intercepting touch scrolling.
+`SiteBackground` is mounted once in the root layout, including documentation, brand and error pages. Seven reusable SVG symbols form a deterministic field of geometric shapes, fine connector lines and small envelopes. Three depths use different slow drift and scroll factors. World-space bands recycle a fixed pool of at most 144 objects; mobile uses two layers, fewer columns and lower frame rates. Only viewport objects update their SVG transforms. There is no Canvas, animation dependency or per-frame React render.
 
-`MAIL_SCENE` centralizes populations, speeds, pointer radii, theme palettes, signal lifetimes and drawing budgets. Populations are capped at 24/48/72 packets; at most six 1.65-second signals coexist. Canvas backing storage is capped at 3.2 million pixels and DPR 1.75. These are configured limits, not benchmark results.
+An SVG luminance mask protects visible text, cards, tables, illustrations and controls. Its geometry is measured on scroll, resize, content/layout changes and font loading, independently of motion frames. A single viewport layer crosses section surfaces continuously. Colors inherit the existing light/dark/system CSS tokens. The SVG is decorative, unfocusable and `pointer-events: none`.
 
-The RAF chain stops when the hero is offscreen, the document is hidden, the user pauses motion, or reduced motion is enabled. Resume starts with zero elapsed delta. Idle rendering uses a lower frame-rate limit and intensity. Reduced motion draws a static fabric; without Canvas or JavaScript, the CSS background and server-rendered content remain usable. No animation dependency is added and no React state is updated per frame.
+Passive pointer listeners provide distance-limited attraction/repulsion within 210px. They exclude links, buttons, inputs, radio/tab controls, editable content and text. Tap recognition rejects scrolling, dragging, long presses and mismatched pointers; it never cancels native scrolling. `data-background-ignore` excludes custom controls and `data-scene-protect` masks custom content.
 
-The old animated SVG packets inside the small illustration were removed so all continuous hero motion belongs to the same pausable lifecycle. The illustration itself remains an accessible, static SVG.
+Empty-area taps create short waves and eight small particles. Signals last 1.9 seconds, merge nearby rapid clicks without renewing their age, and are capped at five on desktop or three on mobile. Scrolling carries signals with their document location and discards departed ones. Pointer influence fades after three seconds of inactivity.
+
+The cancellable RAF loop stops for hidden documents, an invisible layer, reduced motion or the pause control. Offscreen objects skip motion work and SVG updates; masked objects skip SVG updates. Reduced motion retains a static field with ordinary scrolling and no input effects. Background-tab effects are cleared, and resume starts with zero elapsed delta. The background falls back to existing CSS surfaces without JavaScript. The old hero Canvas and renderer have been removed.
 
 `og.png`, its compatibility copy `social.png`, and the apple icon are checked in so CI does not need asset generation. Open Graph and Twitter metadata use `/og.png` (1200×630). To regenerate them after changing the corresponding SVG sources, run `node scripts/generate-assets.mjs` with the installed dependencies (Next.js supplies Sharp).
 

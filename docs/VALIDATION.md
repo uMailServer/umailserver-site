@@ -40,6 +40,18 @@ The updated components were checked against the live CobaltDB theme panel and li
 - Reduced-motion simulation and RAF cancellation are exercised by engine/scheduler tests. OS reduced-motion emulation is unavailable through this browser, and its background tabs stay `visible`, so native OS preference and hidden-tab transitions are source-checked rather than claimed as live browser passes. The explicit pause control and offscreen pause were exercised in the browser.
 - Preview used isolated port 4185; another project's existing server on 4173 was left alone.
 
+## Site-wide SVG background
+
+The site-wide `SiteBackground` replaces the earlier hero-only Canvas implementation described above.
+
+- Nine native Node tests pass for bounded populations across mobile/4K/very long documents, stable world identities and depth parallax, 1,000-click limits and expiry, merging without age renewal, scroll-anchored signals, local pointer settling, static reduced motion including deep scrolling, refresh-rate independence, offscreen motion culling, RAF pause/resume/disposal and tap filtering.
+- The component uses reusable SVG symbols, one luminance mask and a fixed pool of 144 object groups. Mobile has fewer layers/columns, at most three bursts and lower frame limits. Desktop allows five bursts. Every burst expires within 1.9 seconds. These are configured limits, not benchmark claims.
+- Browser matrix: all seven public pages at 375, 768, 1024, 1440, 1920, 2560 and 3840px in both themes. All 98 cases passed: one full-viewport SVG, no Canvas, no horizontal document overflow, bounded populations and `pointer-events: none`. At the tested heights, active pools ranged from 20 to 108 objects.
+- Screenshots reviewed the light/dark hero, section boundaries, mobile middle sections and footer. Masks protect content, illustrations, cards, controls and tables while the same SVG continues across opaque section surfaces.
+- Actual browser input: empty-area taps create waves/particles, six rapid mobile taps stay capped at three simultaneous signals, dragging does not increment interactions, scrolling remains functional and departed effects disappear. Copy, theme and pause controls do not create click signals. Explicit pause freezes object transforms; resume restarts motion. A mobile CTA performs a real client-side route transition and retains a single SVG layer. Final exercised paths have no browser errors/warnings.
+- Reduced-motion simulation and the cancellable scheduler are tested directly. OS media emulation and hidden-tab transitions remain unavailable through this browser, so their DOM event wiring is source-reviewed, not claimed as live browser passes. Offscreen simulation objects skip motion work; the renderer skips offscreen/fully masked objects. Hidden documents stop the RAF chain and clear transient effects.
+- Final typecheck, formatting and all nine tests pass. Production build and export checks pass: 10 HTML pages, 2,148 internal links/assets including reusable SVG references. Preview uses isolated port 4185.
+
 ## Publication boundary
 
 The implementation build and GitHub Pages deployment passed in [run 39125180092](https://github.com/uMailServer/umailserver-site/actions/runs/39125180092), for application revision `453320a`. The custom domain is set to `umailserver.com`.
