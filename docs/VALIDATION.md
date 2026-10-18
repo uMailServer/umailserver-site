@@ -42,8 +42,8 @@ The updated components were checked against the live CobaltDB theme panel and li
 
 ## Publication boundary
 
-Repository and GitHub Pages workflow have been prepared. GitHub Pages custom domain is set to `umailserver.com`.
+The implementation build and GitHub Pages deployment passed in [run 39125180092](https://github.com/uMailServer/umailserver-site/actions/runs/39125180092), for application revision `453320a`. The custom domain is set to `umailserver.com`.
 
-At verification time, Pages domain health reported `NotServedByPagesError`: the apex lacks a GitHub Pages A record. The domain's existing MX records point to `mx1.efwd.spaceship.net` and `mx2.efwd.spaceship.net`; these were not changed.
+During initial setup, Pages reported `NotServedByPagesError`. A later external DNS update resolved that boundary: `https://umailserver.com/` now responds HTTP 200 with valid HTTPS. This task did not change DNS or the domain's existing email records.
 
-DNS provider access is not available in this task. Add the four apex A records documented in README, then enable HTTPS after GitHub's certificate is issued. Custom-domain HTTP/HTTPS delivery and live asset checks cannot be certified before that change. See GitHub Actions for the separate build/deployment result.
+DNS provider access is still outside this task. README retains the standard DNS instructions for future hosting changes; the earlier missing-DNS step no longer blocks the live website.
