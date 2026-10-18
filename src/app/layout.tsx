@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     url: 'https://umailserver.com',
     images: [
       {
-        url: '/social.png',
+        url: '/og.png',
         width: 1200,
         height: 630,
         alt: 'uMailServer — One binary. Complete email.',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'uMailServer — One binary. Complete email.',
-    images: ['/social.png'],
+    images: ['/og.png'],
   },
   icons: { icon: '/logo-mark.svg', apple: '/apple-touch-icon.png' },
 };

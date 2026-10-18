@@ -46,7 +46,7 @@ The web UI illustration is explicitly conceptual. It is not a screenshot. No tes
 
 The four-path Oxog symbol geometry and signature-drawing timing come from the requested CobaltDB reference. Reduced-motion CSS disables decorative motion, transitions and smooth scrolling; all content is visible without entrance animation or JavaScript.
 
-`social.png` and the apple icon are checked in so CI does not need asset generation. To regenerate them after changing the corresponding SVG sources, run `node scripts/generate-assets.mjs` with the installed dependencies (Next.js supplies Sharp).
+`og.png`, its compatibility copy `social.png`, and the apple icon are checked in so CI does not need asset generation. Open Graph and Twitter metadata use `/og.png` (1200×630). To regenerate them after changing the corresponding SVG sources, run `node scripts/generate-assets.mjs` with the installed dependencies (Next.js supplies Sharp).
 
 ## GitHub Pages
 

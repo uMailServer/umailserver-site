@@ -50,7 +50,7 @@ for (const file of htmlFiles) {
 }
 assert.equal((await readFile(path.join(root, 'CNAME'), 'utf8')).trim(), 'umailserver.com');
 assert(await exists(path.join(root, '.nojekyll')));
-for (const f of ['robots.txt', 'sitemap.xml', 'social.png', 'apple-touch-icon.png'])
+for (const f of ['robots.txt', 'sitemap.xml', 'og.png', 'social.png', 'apple-touch-icon.png'])
   assert(await exists(path.join(root, f)), `Missing ${f}`);
 for (const p of [
   '',
