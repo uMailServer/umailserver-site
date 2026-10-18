@@ -22,12 +22,11 @@ export function useReducedMotionPreference() {
 
 export function AnimationToggle() {
   const enabled = useAnimationPreference();
-  const label = enabled ? 'Fare efektlerini kapat' : 'Fare efektlerini aç';
+  const label = enabled ? 'Disable mouse effects' : 'Enable mouse effects';
   return (
     <button
       type="button"
       className="animation-toggle"
-      lang="tr"
       data-ready={enabled !== null}
       disabled={enabled === null}
       aria-pressed={enabled === true}
