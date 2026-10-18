@@ -132,3 +132,17 @@ test('blocked storage preserves a working in-memory switch across consumer remou
   assert.equal(f.store.getSnapshot(), false);
   b();
 });
+
+test('system motion preference remains observable even with a saved mouse-off choice', () => {
+  const f = fixture('off', false);
+  const seen = [];
+  const unsubscribe = f.store.subscribe(() => seen.push(f.store.getReducedSnapshot()));
+  assert.equal(f.store.getSnapshot(), false);
+  assert.equal(f.store.getReducedSnapshot(), false);
+  f.system(true);
+  assert.equal(f.store.getSnapshot(), false);
+  assert.equal(f.store.getReducedSnapshot(), true);
+  f.system(false);
+  assert.deepEqual(seen, [true, false]);
+  unsubscribe();
+});

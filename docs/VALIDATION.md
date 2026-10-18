@@ -73,7 +73,7 @@ This revision replaces the rectangular content masks in the preceding implementa
 - The renderer reuses 12 SVG relay groups for low-alpha connector traces and local rings in the existing response layer. Existing opacity, displacement, trail and population budgets remain in place. No new package, rectangular mask, per-frame layout read or React render is introduced.
 - Focused browser checks pass at 375, 1440 and 3840px in both themes: correct actual viewport, no overflow, one SVG, 12 reusable relay slots and `pointer-events: none`. A real click produced a visible SVG relay and connector; transient relays subsequently returned to zero. Theme controls did not add click signals, pause cleared relays, resume worked, and the exercised console log was empty. Light/dark card screenshots remain readable. Final formatting, typecheck, production build and export checks passed (10 HTML pages, 3,588 internal links/assets).
 
-## Header animation preference
+## Header animation preference (initial behavior)
 
 - The old floating pause control is replaced by a 44×44px mouse button beside the theme picker. Its Turkish title/accessible label and pressed state reflect the action; off has a muted, slashed icon. The switch controls only the shared SVG background and its mouse/tap effects.
 - Off unmounts the scene, clears waves/trails/relays, cancels animation and pending layout frames, disconnects both observers and removes the scene's global input/geometry/visibility listeners. Disposal guards prevent queued observer callbacks from restarting work. On creates a fresh runtime. Preference storage/media-query watchers remain independent so system and cross-tab changes can still update the control.
@@ -81,6 +81,15 @@ This revision replaces the rectangular content masks in the preceding implementa
 - Browser checks passed at 320, 375, 768, 1440 and 3840px in both themes: actual requested viewport, no horizontal overflow or brand/actions overlap, and a 44×44px target. Off removes the SVG, remains off after reload and a real mobile documentation navigation; Space/Enter toggle it with focus retained. Restart produces one running SVG with zero active waves. Theme selection and mobile menu work while off. Exercised browser warning/error log was empty.
 - First-use OS preference changes and inaccessible storage are tested through the injected preference host. Native OS media emulation remains unavailable in the browser controls; that event wiring is source-reviewed rather than claimed as a live browser pass.
 - Production export check passes: 10 HTML pages and 308 internal links/assets. The SVG now mounts only after resolving the client preference, so exported HTML contains no transient background symbols; static content/SEO remain exported.
+
+## Independent quiet motion and mouse effects
+
+This revision supersedes the initial mouse toggle's full-scene removal described above.
+
+- The mouse toggle now disables only pointer/click reactions and disconnects their listeners. It immediately clears waves, relays, trails, halos and reaction offsets while preserving the same scene, object pool, clock, slow drift and parallax. The quiet field runs at its lower idle frame rate. Other logo and interface animations remain independent.
+- Labels now say “Fare efektlerini kapat/aç”. Existing saved choices remain valid. When the switch is off, the separately observed system reduced-motion preference freezes the quiet field and stops its RAF. Explicit mouse-on still overrides the system default as before. Hidden/invisible lifecycle handling and disposal guards remain intact.
+- All 26 native tests passed, including three new cases: quiet objects continue moving while disabled inputs are ignored and effects cleared; mouse effects can restart without losing the scene clock; reduced motion freezes the quiet field independently; and system motion changes remain observable with a saved mouse-off preference (the first case includes restart coverage).
+- Production browser observations: switching off cleared waves to zero while the scene stayed running; eight sampled object transforms changed between observations; a new real click did not increase the interaction count. Reload restored mouse-off with a running quiet scene. At 375px in dark mode, Space re-enabled input, turning it off again kept scrolling functional, and the warning/error log was empty. Light desktop behavior was also exercised. Native OS media emulation remains unavailable; system-default and reduced-motion behavior are unit-tested and event wiring is source-reviewed.
 
 ## Publication boundary
 

@@ -367,3 +367,58 @@ test('clicking a shape directly starts its own relay without waiting for another
   runFor(s, 0.25);
   assert(s.relays.some((r) => r.source === 'fixture-0'));
 });
+
+test('disabling mouse effects clears reactions and ignores input while ambient objects keep moving', () => {
+  const s = sceneAt();
+  s.movePointer(500, 400);
+  s.tap(500, 400);
+  runFor(s, 0.25);
+  assert(s.bursts.length > 0 && s.trail.length > 0);
+  const population = s.objects;
+  const clock = s.clock;
+  s.setInteractive(false);
+  assert.equal(s.bursts.length + s.relays.length + s.trail.length, 0);
+  assert.equal(s.pointer.strength, 0);
+  const before = s.objects.filter((o) => o.visible).map((o) => [o.key, o.x, o.y, o.rotation]);
+  for (let i = 0; i < 100; i++) {
+    s.movePointer(450 + i, 400);
+    assert.equal(s.tap(450 + i, 400), false);
+    s.advance(1 / 30);
+  }
+  assert.equal(s.objects, population);
+  assert(s.clock > clock + 3);
+  assert.equal(s.bursts.length + s.relays.length + s.trail.length, 0);
+  assert(s.objects.every((o) => o.reaction === 0));
+  assert(
+    before.some(([key, x, y, rotation]) => {
+      const o = s.objects.find((o) => o.key === key);
+      return o && Math.hypot(o.x - x, o.y - y) + Math.abs(o.rotation - rotation) > 1;
+    }),
+  );
+  assert.equal(s.fps, 24);
+  s.setInteractive(true);
+  assert.equal(s.clock > clock, true);
+  assert.equal(s.tap(500, 400), true);
+  s.movePointer(500, 400);
+  runFor(s, 0.15);
+  assert(s.bursts.length > 0 && s.trail.length > 0);
+});
+
+test('reduced motion independently freezes the quiet field while mouse effects are off', () => {
+  const s = sceneAt();
+  s.setInteractive(false);
+  runFor(s, 1);
+  s.setReduced(true);
+  const clock = s.clock;
+  const before = s.objects.map((o) => [o.x, o.y, o.rotation]);
+  runFor(s, 3);
+  assert.equal(s.clock, clock);
+  assert.deepEqual(
+    s.objects.map((o) => [o.x, o.y, o.rotation]),
+    before,
+  );
+  s.setReduced(false);
+  runFor(s, 1);
+  assert(s.clock > clock);
+  assert.equal(s.tap(500, 400), false);
+});

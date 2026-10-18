@@ -12,9 +12,17 @@ export function useAnimationPreference() {
   );
 }
 
+export function useReducedMotionPreference() {
+  return useSyncExternalStore(
+    animationPreference.subscribe,
+    animationPreference.getReducedSnapshot,
+    serverPreference,
+  );
+}
+
 export function AnimationToggle() {
   const enabled = useAnimationPreference();
-  const label = enabled ? 'Animasyonları kapat' : 'Animasyonları aç';
+  const label = enabled ? 'Fare efektlerini kapat' : 'Fare efektlerini aç';
   return (
     <button
       type="button"

@@ -24,6 +24,9 @@ export function createAnimationPreferenceStore(host: AnimationPreferenceHost) {
   };
   const emit = () => listeners.forEach((listener) => listener());
   return {
+    getReducedSnapshot() {
+      return host.reduced();
+    },
     getSnapshot() {
       if (!loaded) refresh();
       return resolveAnimationPreference(saved, host.reduced());

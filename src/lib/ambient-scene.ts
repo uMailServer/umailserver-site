@@ -103,6 +103,7 @@ export class AmbientScene {
   clock = 0;
   mobile = false;
   reduced = false;
+  interactive = true;
   objects: AmbientObject[] = [];
   bursts: AmbientBurst[] = [];
   relays: AmbientRelay[] = [];
@@ -172,6 +173,16 @@ export class AmbientScene {
     }
     this.position(0);
   }
+  setInteractive(value: boolean) {
+    this.interactive = value;
+    if (!value) {
+      this.clearEffects();
+      for (const object of this.objects) {
+        object.offsetX = object.offsetY = object.reaction = 0;
+      }
+      this.position(0);
+    }
+  }
   setReduced(value: boolean) {
     this.reduced = value;
     if (value) {
@@ -192,7 +203,7 @@ export class AmbientScene {
     this.pointer.strength = 0;
   }
   movePointer(x: number, y: number) {
-    if (this.reduced || !Number.isFinite(x + y)) return;
+    if (!this.interactive || this.reduced || !Number.isFinite(x + y)) return;
     const last = this.trail.at(-1);
     if (!last || Math.hypot(last.x - x, last.y - y) > 7) {
       this.trail.push({ x, y, age: 0 });
@@ -206,6 +217,7 @@ export class AmbientScene {
   }
   tap(x: number, y: number) {
     if (
+      !this.interactive ||
       this.reduced ||
       !Number.isFinite(x + y) ||
       x < 0 ||
@@ -232,7 +244,7 @@ export class AmbientScene {
     return true;
   }
   get active() {
-    return this.clock - this.lastInteraction < AMBIENT.idleAfter;
+    return this.interactive && this.clock - this.lastInteraction < AMBIENT.idleAfter;
   }
   get fps() {
     return this.mobile ? (this.active ? 30 : 18) : this.active ? 45 : 24;

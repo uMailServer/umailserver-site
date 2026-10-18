@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { useAnimationPreference } from './animation-control';
+import { useAnimationPreference, useReducedMotionPreference } from './animation-control';
 import {
   AMBIENT,
   AmbientScene,
@@ -21,11 +21,15 @@ const controls =
 /** A single decorative SVG viewport shared by every route. React never renders an animation frame. */
 export function SiteBackground() {
   const enabled = useAnimationPreference();
-  return enabled ? <AnimatedBackground /> : null;
+  const reduced = useReducedMotionPreference();
+  if (enabled === null || reduced === null) return null;
+  // An explicit opt-in can override the system default, as before.
+  return <AnimatedBackground interactive={enabled} reduced={reduced && !enabled} />;
 }
 
-// Disabling unmounts this runtime: every RAF, observer and input listener is disposed.
-function AnimatedBackground() {
+// Keep the quiet scene alive when mouse effects are disabled.
+function AnimatedBackground({ interactive, reduced }: { interactive: boolean; reduced: boolean }) {
+  const configureRef = useRef<((interactive: boolean, reduced: boolean) => void) | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const pathname = usePathname();
   const id = `ambient-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
@@ -60,7 +64,7 @@ function AnimatedBackground() {
     let previousRelays = -1;
     let interactions = Number(svg.dataset.interactions || 0);
     let previousVisible = -1;
-    const canAnimate = () => inView && !document.hidden;
+    const canAnimate = () => inView && !document.hidden && !scene.reduced;
     const refreshGeometry = () => {
       dirty = false;
       const width = document.documentElement.clientWidth,
@@ -224,7 +228,7 @@ function AnimatedBackground() {
     const syncActivity = () => {
       if (disposed) return;
       loop.setActive(canAnimate());
-      svg.dataset.sceneState = canAnimate() ? 'running' : 'paused';
+      svg.dataset.sceneState = scene.reduced ? 'reduced' : canAnimate() ? 'running' : 'paused';
     };
     const invalidate = () => {
       if (disposed) return;
@@ -294,8 +298,39 @@ function AnimatedBackground() {
       syncActivity();
       if (!document.hidden) paint();
     };
-    refreshGeometry();
-    syncActivity();
+    const passive = { passive: true, capture: true } as const;
+    let disconnectInput: (() => void) | undefined;
+    let mode = '';
+    const configure = (enabled: boolean, reduce: boolean) => {
+      if (disposed || mode === `${enabled}:${reduce}`) return;
+      mode = `${enabled}:${reduce}`;
+      disconnectInput?.();
+      disconnectInput = undefined;
+      gesture = null;
+      scene.clearEffects();
+      scene.setInteractive(enabled && !reduce);
+      scene.setReduced(reduce);
+      svg.dataset.pointerEffects = scene.interactive ? 'on' : 'off';
+      if (scene.interactive) {
+        window.addEventListener('pointermove', move, passive);
+        window.addEventListener('pointerdown', down, passive);
+        window.addEventListener('pointerup', up, passive);
+        document.documentElement.addEventListener('pointerleave', leave, { passive: true });
+        window.addEventListener('pointercancel', leave, passive);
+        disconnectInput = () => {
+          window.removeEventListener('pointermove', move, true);
+          window.removeEventListener('pointerdown', down, true);
+          window.removeEventListener('pointerup', up, true);
+          document.documentElement.removeEventListener('pointerleave', leave);
+          window.removeEventListener('pointercancel', leave, true);
+        };
+      }
+      dirty = true;
+      syncActivity();
+      paint();
+    };
+    configureRef.current = configure;
+    configure(interactive, reduced);
     svg.dataset.ready = 'true';
     const sizes = new ResizeObserver(invalidate);
     sizes.observe(document.body);
@@ -306,12 +341,6 @@ function AnimatedBackground() {
       syncActivity();
     });
     viewport.observe(svg);
-    const passive = { passive: true, capture: true } as const;
-    window.addEventListener('pointermove', move, passive);
-    window.addEventListener('pointerdown', down, passive);
-    window.addEventListener('pointerup', up, passive);
-    document.documentElement.addEventListener('pointerleave', leave, { passive: true });
-    window.addEventListener('pointercancel', leave, passive);
     window.addEventListener('scroll', scroll, passive);
     window.addEventListener('resize', invalidate, passive);
     document.addEventListener('visibilitychange', visibility);
@@ -325,16 +354,18 @@ function AnimatedBackground() {
       if (layoutFrame !== null) cancelAnimationFrame(layoutFrame);
       sizes.disconnect();
       viewport.disconnect();
-      window.removeEventListener('pointermove', move, true);
-      window.removeEventListener('pointerdown', down, true);
-      window.removeEventListener('pointerup', up, true);
-      document.documentElement.removeEventListener('pointerleave', leave);
-      window.removeEventListener('pointercancel', leave, true);
+      configureRef.current = null;
+      disconnectInput?.();
       window.removeEventListener('scroll', scroll, true);
       window.removeEventListener('resize', invalidate, true);
       document.removeEventListener('visibilitychange', visibility);
     };
+    // Prop changes configure the existing scene in the following effect.
   }, [pathname, id]);
+
+  useEffect(() => {
+    configureRef.current?.(interactive, reduced);
+  }, [interactive, reduced]);
 
   return (
     <svg
