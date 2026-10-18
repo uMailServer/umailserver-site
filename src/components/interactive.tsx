@@ -1,41 +1,73 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { Icon, Logo } from './icons';
 import Link from 'next/link';
 
 type Theme = 'light' | 'dark' | 'system';
 const themeIcon = { light: 'sun', dark: 'moon', system: 'monitor' };
 
+function readTheme(): Theme {
+  const value = document.documentElement.dataset.theme;
+  return value === 'light' || value === 'dark' ? value : 'system';
+}
+
+function applyTheme(value: string | null) {
+  if (value === 'light' || value === 'dark') document.documentElement.dataset.theme = value;
+  else delete document.documentElement.dataset.theme;
+}
+
+function subscribeTheme(onChange: () => void) {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === 'umail-theme' || event.key === null) {
+      applyTheme(event.newValue);
+      onChange();
+    }
+  };
+  window.addEventListener('umail:theme-change', onChange);
+  window.addEventListener('storage', onStorage);
+  return () => {
+    window.removeEventListener('umail:theme-change', onChange);
+    window.removeEventListener('storage', onStorage);
+  };
+}
+
 export function Header() {
-  const [theme, setTheme] = useState<Theme>('system');
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => 'system' as Theme);
+  const themeLabel = theme[0].toUpperCase() + theme.slice(1);
   const [open, setOpen] = useState(false);
   const [mobile, setMobile] = useState(false);
   const picker = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const themeId = useId();
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('umail-theme');
-      if (saved === 'light' || saved === 'dark' || saved === 'system') setTheme(saved);
-    } catch {}
-    const close = (e: PointerEvent) => {
+    if (!open) return;
+    picker.current?.querySelector<HTMLInputElement>('input:checked')?.focus();
+    const close = (e: PointerEvent | FocusEvent) => {
       if (!picker.current?.contains(e.target as Node)) setOpen(false);
     };
+    const escape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        trigger.current?.focus();
+      }
+    };
     document.addEventListener('pointerdown', close);
-    return () => document.removeEventListener('pointerdown', close);
-  }, []);
-  useEffect(() => {
-    if (open)
-      picker.current?.querySelector<HTMLButtonElement>(`[data-theme-option="${theme}"]`)?.focus();
-  }, [open, theme]);
+    document.addEventListener('focusin', close);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('focusin', close);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [open]);
   function choose(value: Theme) {
-    setTheme(value);
+    applyTheme(value);
     try {
       localStorage.setItem('umail-theme', value);
     } catch {}
-    if (value === 'system') delete document.documentElement.dataset.theme;
-    else document.documentElement.dataset.theme = value;
+    window.dispatchEvent(new Event('umail:theme-change'));
   }
   return (
     <header className="site-header">
@@ -49,72 +81,66 @@ export function Header() {
           <Link href="/docs/">Documentation</Link>
         </nav>
         <div className="header-actions">
-          <div
-            className="theme-picker"
-            ref={picker}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                setOpen(false);
-                trigger.current?.focus();
-              }
-            }}
-          >
+          <div className="theme-picker" ref={picker}>
             <button
+              type="button"
               ref={trigger}
               className="theme-trigger"
-              aria-label={`Color theme: ${theme}`}
+              aria-label={`Color theme: ${themeLabel}`}
               aria-expanded={open}
               aria-haspopup="dialog"
-              aria-controls="theme-dialog"
+              aria-controls={themeId}
               onClick={() => setOpen(!open)}
             >
               <Icon name={themeIcon[theme]} size={17} />
-              <span>{theme}</span>
-              <Icon name="chevron" size={13} />
+              <span>{themeLabel}</span>
+              <Icon name="chevron" className="theme-chevron" size={13} />
             </button>
             {open && (
-              <div
-                className="theme-popover"
-                id="theme-dialog"
-                role="dialog"
-                aria-label="Appearance"
-              >
-                <strong>Appearance</strong>
-                <p>A little more you.</p>
-                <div role="group" aria-label="Color theme" className="theme-options">
-                  {(['light', 'dark', 'system'] as Theme[]).map((value, i) => (
-                    <button
-                      key={value}
-                      data-theme-option={value}
-                      aria-pressed={theme === value}
-                      onClick={() => choose(value)}
-                      onKeyDown={(e) => {
-                        if (['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(e.key)) {
-                          e.preventDefault();
-                          const next =
-                            e.key === 'Home'
-                              ? 0
-                              : e.key === 'End'
-                                ? 2
-                                : (i + (e.key === 'ArrowRight' ? 1 : 2)) % 3;
-                          picker.current
-                            ?.querySelector<HTMLButtonElement>(
-                              `[data-theme-option="${['light', 'dark', 'system'][next]}"]`,
-                            )
-                            ?.focus();
-                        }
-                      }}
-                    >
-                      <Icon name={themeIcon[value]} size={21} />
-                      <span>{value}</span>
-                    </button>
-                  ))}
+              <div className="theme-panel" id={themeId} role="dialog" aria-label="Appearance">
+                <div className="theme-panel-heading">
+                  <span>Appearance</span>
+                  <span className="theme-panel-hint">Your space, your style.</span>
                 </div>
-                <small>
+                <fieldset className="theme-options">
+                  <legend className="sr-only">Color theme</legend>
+                  {(['light', 'dark', 'system'] as Theme[]).map((value) => (
+                    <label className="theme-option" key={value}>
+                      <input
+                        type="radio"
+                        name={`${themeId}-theme`}
+                        value={value}
+                        checked={theme === value}
+                        onChange={() => choose(value)}
+                      />
+                      <span className={`theme-preview theme-preview-${value}`} aria-hidden="true">
+                        <span className="theme-preview-window">
+                          <span className="theme-preview-sidebar" />
+                          <span className="theme-preview-content">
+                            <i />
+                            <i />
+                            <i />
+                          </span>
+                        </span>
+                        <span className="theme-choice-icon">
+                          <Icon name={themeIcon[value]} />
+                        </span>
+                        <span className="theme-choice-check">
+                          <Icon name="check" />
+                        </span>
+                      </span>
+                      <span className="theme-option-label">
+                        {value[0].toUpperCase() + value.slice(1)}
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+                <p className="theme-panel-status" aria-live="polite">
+                  <Icon name={themeIcon[theme]} />
                   {theme === 'system'
-                    ? 'In sync with your device.'
-                    : `${theme === 'light' ? 'A brighter' : 'A quieter'} view of your infrastructure.`}
-                </small>
+                    ? 'Matches your device’s appearance.'
+                    : `${themeLabel} mode, just how you like it.`}
+                </p>
               </div>
             )}
           </div>
@@ -272,10 +298,25 @@ export function InstallTabs() {
 
 export function MotionObserver() {
   useEffect(() => {
+    if (!('IntersectionObserver' in window)) return;
+    const logos = document.querySelectorAll<SVGElement>('.oxog-symbol');
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    logos.forEach((logo) => {
+      if (!motion.matches) logo.dataset.motion = 'waiting';
+    });
+    const reduceMotion = () => {
+      if (motion.matches)
+        logos.forEach((logo) => {
+          delete logo.dataset.motion;
+        });
+    };
+    motion.addEventListener('change', reduceMotion);
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            if (entry.target instanceof SVGElement && !motion.matches)
+              entry.target.dataset.motion = 'drawing';
             entry.target.classList.add('in-view');
             observer.unobserve(entry.target);
           }
@@ -284,7 +325,13 @@ export function MotionObserver() {
       { threshold: 0.12 },
     );
     document.querySelectorAll('.reveal, .oxog-symbol').forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      motion.removeEventListener('change', reduceMotion);
+      logos.forEach((logo) => {
+        delete logo.dataset.motion;
+      });
+    };
   }, []);
   return null;
 }

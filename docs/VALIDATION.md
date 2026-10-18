@@ -20,6 +20,16 @@
 
 After the initial matrix, the incoming-mail diagram's route label was corrected to “Sieve · local delivery” to avoid implying every inbound message enters the outgoing queue. Mobile documentation links were enlarged. Production build and export checks were rerun.
 
+## Theme picker and Oxog reference alignment
+
+The updated components were checked against the live CobaltDB theme panel and live NineDeploy footer. Local production build and export verification passed. Browser checks covered:
+
+- Native radio selection with keyboard arrows, Escape returning focus to the trigger, closing on focus-out, and saved theme restoration after reload.
+- Three preview cards and an in-viewport panel at all seven target widths in both themes: 14 panel checks passed.
+- All seven public pages at all seven target widths in both themes: 98 layout checks, no document-level horizontal overflow.
+- Oxog logo state changing from `waiting` to `drawing` on viewport entry, four 1.6-second path animations with 0/.25/.5/.9-second delays, and completed paths at zero dash offset.
+- Desktop and mobile screenshots of the panel and studio card. Reduced-motion behavior is implemented in both the observer and CSS; OS media emulation remains unavailable through the selected browser controls.
+
 ## Publication boundary
 
 Repository and GitHub Pages workflow have been prepared. GitHub Pages custom domain is set to `umailserver.com`.

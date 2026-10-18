@@ -44,7 +44,7 @@ Preview: http://127.0.0.1:4173. `scripts/serve.mjs` serves the actual `out/` fil
 
 The web UI illustration is explicitly conceptual. It is not a screenshot. No testimonial, benchmark, customer count or delivery guarantee is presented.
 
-The four-path Oxog symbol geometry and signature-drawing timing come from the requested CobaltDB reference. Reduced-motion CSS disables decorative motion, transitions and smooth scrolling; all content is visible without entrance animation or JavaScript.
+The theme picker follows CobaltDB's three interface previews, native Light/Dark/System radio controls, selected checkmark, status copy and keyboard/focus behavior. The Oxog studio card follows NineDeploy's rounded panel, ambient pink/purple accents, original four-path symbol and project links. Its signature draws on viewport entry over 1.6 seconds with .25/.5/.9-second path delays. Reduced-motion CSS disables decorative motion, transitions and smooth scrolling; the complete logo and content remain visible without JavaScript.
 
 `og.png`, its compatibility copy `social.png`, and the apple icon are checked in so CI does not need asset generation. Open Graph and Twitter metadata use `/og.png` (1200×630). To regenerate them after changing the corresponding SVG sources, run `node scripts/generate-assets.mjs` with the installed dependencies (Next.js supplies Sharp).
 

@@ -47,23 +47,44 @@ export function Footer() {
             <a href={`${repo}/blob/main/LICENSE`}>License</a>
           </div>
         </div>
-        <div className="studio">
-          <a href="https://oxog.net/" aria-label="Visit Oxog studio" className="oxog-mark">
+        <section className="studio" aria-label="The studio behind uMailServer">
+          <a
+            href="https://oxog.net/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="OXOGNET"
+            className="oxog-mark"
+          >
             <OxogLogo />
           </a>
           <div className="studio-copy">
-            <span className="eyebrow">INDEPENDENT SOFTWARE. SHARED POSSIBILITIES.</span>
-            <a className="oxog-word" href="https://oxog.net/">
+            <p>uMailServer is built and maintained by</p>
+            <a className="oxog-word" href="https://oxog.net/" target="_blank" rel="noreferrer">
               oxog<span>net</span>
               <b>.</b>
               <Icon name="external" size={23} />
             </a>
-            <p>Explore the studio and the ideas behind the tools.</p>
+            <p className="studio-description">
+              A small studio in Estonia building AI agents, developer tools and the infrastructure
+              behind them.
+            </p>
           </div>
-          <a className="text-link studio-link" href="https://oxog.net/">
-            Meet the studio <Icon name="external" size={18} />
-          </a>
-        </div>
+          <ul className="studio-projects" aria-label="More from OXOGNET">
+            {[
+              ['AGEZT', 'An agentic operating system'],
+              ['WrongStack', 'AI coding orchestration'],
+              ['WrongTrace', 'Agent observability'],
+              ['UWAS', 'Unified web app server'],
+            ].map(([name, description]) => (
+              <li key={name}>
+                <a href="https://oxog.net/projects" target="_blank" rel="noreferrer">
+                  <strong>{name}</strong>
+                  <span>{description}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
         <div className="footer-bottom">
           <span>© {new Date().getUTCFullYear()} uMailServer contributors.</span>
           <span>Built in the open. Made to be yours.</span>

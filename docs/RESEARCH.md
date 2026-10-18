@@ -27,7 +27,9 @@ The provided logo and product infographic establish the turquoise envelope/light
 
 Fetched full HTML from CobaltDB, DockRouter, UWAS, NothingDNS, GuardianWAF and CacheStorm. Their shared practices informed the editorial hierarchy, open-source links, technical graphics and useful code samples. CobaltDB was also inspected in a browser: its theme picker provides Light/Dark/System, current-state feedback and keyboard focus. The site implements those behaviors in its own theme system.
 
-CobaltDB's footer supplied the exact four-path Oxog SVG geometry and CSS signature-drawing timing (1.6 seconds, .25/.5/.9-second path delays). The symbol draws on entry and respects reduced motion.
+The theme picker now follows CobaltDB's actual component markup and CSS: 328px panel, three miniature interface previews, native radio inputs, selected checkmark, status text, keyboard arrows, Escape focus return and dismissal when focus or pointer leaves the picker. The selection uses uMailServer's teal accent and persists across reloads and same-origin tabs.
+
+Following the updated brief, NineDeploy's current footer supplied the Oxog card composition, original four-path SVG geometry, #ed0878 pink and theme-aware purple, project cards, and signature-drawing timing (1.6 seconds, .25/.5/.9-second path delays). The symbol is progressively enhanced with an entry animation; it stays complete with JavaScript disabled or reduced motion enabled. Its project links target the same OXOGNET ecosystem page as the reference. The copy names uMailServer and omits NineDeploy-specific operational claims.
 
 `https://anubis.watch` could not be inspected because its certificate hostname did not match. No certificate warning was bypassed. `https://umailserver.com` had no working web response during initial research; domain DNS did have existing Spaceship mail-forwarding MX records, which were left untouched.
 
