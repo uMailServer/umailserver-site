@@ -6,8 +6,16 @@ export const AMBIENT = {
   mobileBursts: 3,
   burstLife: 1.9,
   sparks: 8,
-  pointerRadius: 210,
-  pointerDisplacement: 26,
+  pointerRadius: 330,
+  mobilePointerRadius: 230,
+  pointerDisplacement: 100,
+  burstRadius: 330,
+  mobileBurstRadius: 220,
+  burstDisplacement: 85,
+  maxDisplacement: 135,
+  maxTrail: 18,
+  trailLife: 0.85,
+  connections: 6,
   idleAfter: 3,
   tap: { distance: 8, scroll: 4, duration: 500 },
 } as const;
@@ -47,8 +55,13 @@ export type AmbientObject = {
   kind: number;
   opacity: number;
   visible: boolean;
+  reaction: number;
 };
 export type AmbientBurst = { x: number; worldY: number; age: number; seed: number; power: number };
+export function waveRadius(age: number, mobile: boolean) {
+  const progress = Math.min(1, Math.max(0, age / AMBIENT.burstLife));
+  return (mobile ? AMBIENT.mobileBurstRadius : AMBIENT.burstRadius) * (1 - (1 - progress) ** 3);
+}
 export class AmbientScene {
   width = 1;
   height = 1;
@@ -58,6 +71,7 @@ export class AmbientScene {
   reduced = false;
   objects: AmbientObject[] = [];
   bursts: AmbientBurst[] = [];
+  trail: { x: number; y: number; age: number }[] = [];
   pointer = { x: 0, y: 0, active: false, strength: 0 };
   private lastInteraction = -10;
   private bandKey = '';
@@ -103,6 +117,7 @@ export class AmbientScene {
               kind: Math.floor(hash(seed + 11) * 7),
               opacity: 0,
               visible: false,
+              reaction: 0,
             };
             o.baseX = ((column + 0.15 + hash(seed) * 0.7) / columns) * width;
             o.worldY = (row + 0.15 + hash(seed + 2) * 0.7) * spacing;
@@ -121,17 +136,24 @@ export class AmbientScene {
       for (const o of this.objects) {
         o.offsetX = 0;
         o.offsetY = 0;
+        o.reaction = 0;
       }
       this.position(0);
     }
   }
   clearEffects() {
     this.bursts = [];
+    this.trail = [];
     this.pointer.active = false;
     this.pointer.strength = 0;
   }
   movePointer(x: number, y: number) {
     if (this.reduced || !Number.isFinite(x + y)) return;
+    const last = this.trail.at(-1);
+    if (!last || Math.hypot(last.x - x, last.y - y) > 7) {
+      this.trail.push({ x, y, age: 0 });
+      if (this.trail.length > AMBIENT.maxTrail) this.trail.shift();
+    }
     Object.assign(this.pointer, { x, y, active: true });
     this.lastInteraction = this.clock;
   }
@@ -171,12 +193,14 @@ export class AmbientScene {
     const smoothing = 1 - Math.exp(-dt * 7);
     this.pointer.strength +=
       ((this.pointer.active && this.active ? 1 : 0) - this.pointer.strength) * smoothing;
+    for (const point of this.trail) point.age += dt;
+    this.trail = this.trail.filter((point) => point.age < AMBIENT.trailLife);
     for (const burst of this.bursts) burst.age += dt;
     this.bursts = this.bursts.filter(
       (b) =>
         b.age < AMBIENT.burstLife &&
-        b.worldY - this.scroll > -240 &&
-        b.worldY - this.scroll < this.height + 240,
+        b.worldY - this.scroll > -AMBIENT.burstRadius &&
+        b.worldY - this.scroll < this.height + AMBIENT.burstRadius,
     );
     this.position(smoothing);
   }
@@ -193,27 +217,45 @@ export class AmbientScene {
         dy = y - this.pointer.y;
       const distance = Math.hypot(dx, dy);
       const influence =
-        ease(1 - distance / AMBIENT.pointerRadius) * this.pointer.strength * o.depth;
-      // Alternate attraction and repulsion; the support is strictly local.
+        ease(1 - distance / (this.mobile ? AMBIENT.mobilePointerRadius : AMBIENT.pointerRadius)) *
+        this.pointer.strength *
+        o.depth;
+      // Smooth compact support: radial attraction/repulsion plus a small tangential ripple.
       const direction = o.kind % 2 ? -1 : 1;
-      let tx = (dx / Math.max(distance, 1)) * influence * AMBIENT.pointerDisplacement * direction;
-      let ty = (dy / Math.max(distance, 1)) * influence * AMBIENT.pointerDisplacement * direction;
+      const radial = influence * AMBIENT.pointerDisplacement * direction;
+      const ripple = Math.sin(t * 2.3 + distance / 48) * influence * 19;
+      let tx = (dx * radial - dy * ripple) / Math.max(distance, 1);
+      let ty = (dy * radial + dx * ripple) / Math.max(distance, 1);
+      let reaction = influence;
       for (const b of this.bursts) {
         const bx = x - b.x,
           by = y - (b.worldY - this.scroll),
           d = Math.hypot(bx, by);
-        if (d > 240) continue;
+        const radius = this.mobile ? AMBIENT.mobileBurstRadius : AMBIENT.burstRadius;
+        if (d > radius) continue;
         const progress = b.age / AMBIENT.burstLife;
-        const force =
-          Math.exp(-(((d - 210 * progress) / 30) ** 2)) * Math.sin(progress * Math.PI) * 10;
+        const envelope =
+          Math.exp(-(((d - waveRadius(b.age, this.mobile)) / 62) ** 2)) *
+          Math.sin(progress * Math.PI) *
+          ease(1 - d / radius);
+        const force = envelope * AMBIENT.burstDisplacement * b.power * (0.6 + o.depth);
         tx += (bx / Math.max(1, d)) * force;
         ty += (by / Math.max(1, d)) * force;
+        reaction += envelope * b.power;
       }
+      const magnitude = Math.hypot(tx, ty);
+      if (magnitude > AMBIENT.maxDisplacement) {
+        tx *= AMBIENT.maxDisplacement / magnitude;
+        ty *= AMBIENT.maxDisplacement / magnitude;
+      }
+      o.reaction = this.reduced ? 0 : Math.min(1, reaction);
       o.offsetX += (tx - o.offsetX) * smoothing;
       o.offsetY += (ty - o.offsetY) * smoothing;
       o.x = x + o.offsetX;
       o.y = y + o.offsetY;
-      o.rotation = Math.sin(t * 0.045 + phase) * (o.kind === 5 ? 6 : 24);
+      o.rotation =
+        Math.sin(t * 0.045 + phase) * (o.kind === 5 ? 6 : 24) +
+        o.reaction * Math.sin(t * 1.5 + phase) * 18;
       const edge = ease(Math.min(o.y + 40, this.height + 40 - o.y) / 100);
       o.opacity = edge * (0.16 + o.depth * 0.21 + influence * 0.2);
     }

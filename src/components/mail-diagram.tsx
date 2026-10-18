@@ -1,6 +1,6 @@
 export function MailDiagram() {
   return (
-    <div className="mail-diagram" data-scene-protect="0.42">
+    <div className="mail-diagram">
       <div className="diagram-overline">
         <span>
           <i /> ALL SYSTEMS. ONE BINARY.

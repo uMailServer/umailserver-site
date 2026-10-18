@@ -182,3 +182,87 @@ test('a touch tap is accepted but scrolling, dragging, long press and another fi
   assert.equal(isSceneTap(start, { ...tap, time: 900 }), false);
   assert.equal(isSceneTap(start, { ...tap, id: 4 }), false);
 });
+
+test('nearby objects visibly travel at least 24px under sustained pointer attraction or repulsion', () => {
+  const s = sceneAt();
+  const o = s.objects.find(
+    (o) => o.visible && o.depth > 0.7 && o.x > 120 && o.x < 1200 && o.y > 160 && o.y < 650,
+  );
+  assert(o);
+  s.movePointer(o.x - 60, o.y - 30);
+  runFor(s, 0.6);
+  assert(
+    Math.hypot(o.offsetX, o.offsetY) > 24,
+    `near object moved only ${Math.hypot(o.offsetX, o.offsetY).toFixed(2)}px`,
+  );
+  assert(
+    s.objects
+      .filter((p) => Math.hypot(p.x - s.pointer.x, p.y - s.pointer.y) > 450)
+      .every((p) => Math.hypot(p.offsetX, p.offsetY) < 0.001),
+  );
+});
+
+test('a click wave produces a brief visible displacement of nearby geometry', () => {
+  const s = sceneAt();
+  const o = s.objects.find(
+    (o) => o.visible && o.depth > 0.7 && o.x > 160 && o.x < 1200 && o.y > 160 && o.y < 650,
+  );
+  assert(o);
+  s.tap(o.x - 110, o.y);
+  let peak = 0;
+  for (let i = 0; i < 60; i++) {
+    s.advance(1 / 60);
+    peak = Math.max(peak, Math.hypot(o.offsetX, o.offsetY));
+  }
+  assert(peak > 24, `wave displacement peaked at only ${peak.toFixed(2)}px`);
+  runFor(s, 5);
+  assert.equal(s.bursts.length, 0);
+  assert(Math.hypot(o.offsetX, o.offsetY) < 0.001);
+});
+
+test('pointer trails stay bounded, expire quickly and disappear in reduced motion', () => {
+  const s = sceneAt();
+  for (let i = 0; i < 2000; i++) s.movePointer(i % 1400, i % 850);
+  assert.equal(s.trail.length, AMBIENT.maxTrail);
+  assert(s.trail.every((p) => p.age === 0));
+  runFor(s, 1);
+  assert.equal(s.trail.length, 0);
+  s.movePointer(200, 200);
+  s.movePointer(240, 220);
+  s.setReduced(true);
+  assert.equal(s.trail.length, 0);
+  assert.equal(s.pointer.strength, 0);
+  assert(s.objects.every((o) => o.reaction === 0));
+});
+
+test('scroll keeps the pointer in client space and anchors a fresh click to the new document position', () => {
+  const s = sceneAt();
+  s.movePointer(480, 350);
+  runFor(s, 0.3);
+  s.viewport(1440, 900, 2500);
+  assert.equal(s.pointer.x, 480);
+  assert.equal(s.pointer.y, 350);
+  assert(s.pointer.active);
+  assert(s.pointer.strength > 0.5);
+  s.tap(480, 350);
+  assert.equal(s.bursts[0].worldY, 2850);
+  s.viewport(1440, 900, 2540);
+  assert.equal(s.pointer.y, 350);
+  assert.equal(s.bursts[0].worldY - s.scroll, 310);
+});
+
+test('overlapping impulses never launch geometry beyond the displacement budget', () => {
+  const s = sceneAt();
+  for (let i = 0; i < 1000; i++) {
+    s.tap(500 + (i % 4) * 50, 300 + (i % 3) * 50);
+    s.movePointer(500, 350);
+    s.advance(1 / 120);
+    assert(s.bursts.length <= AMBIENT.maxBursts);
+    assert(
+      s.objects.every((o) => Math.hypot(o.offsetX, o.offsetY) <= AMBIENT.maxDisplacement + 0.0001),
+    );
+  }
+  s.clearEffects();
+  runFor(s, 4);
+  assert(s.objects.every((o) => o.reaction < 0.0001));
+});

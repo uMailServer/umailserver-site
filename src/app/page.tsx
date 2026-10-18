@@ -57,7 +57,7 @@ export default function Home() {
     <main id="main">
       <section className="hero-scene">
         <div className="hero container">
-          <div className="hero-copy" data-scene-protect="">
+          <div className="hero-copy">
             <a className="release-pill" href={`${repo}#readme`}>
               <span className="status-dot" />
               <span>v0.1.0 beta</span>

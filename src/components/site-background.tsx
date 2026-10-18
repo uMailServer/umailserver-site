@@ -6,6 +6,7 @@ import {
   AMBIENT,
   AmbientScene,
   isSceneTap,
+  waveRadius,
   SceneLoop,
   type ScenePointerSample,
 } from '@/lib/ambient-scene';
@@ -15,14 +16,9 @@ const burstSlots = Array.from({ length: AMBIENT.maxBursts }, (_, i) => i);
 const sparks = Array.from({ length: AMBIENT.sparks }, (_, i) => i);
 const controls =
   'a,button,input,select,textarea,summary,label,[role="button"],[role="link"],[role="radio"],[role="tab"],[role="menuitem"],[contenteditable]:not([contenteditable="false"]),[data-background-ignore]';
-const text = 'h1,h2,h3,h4,h5,h6,p,li,pre,code,blockquote,dt,dd,figcaption,td,th,caption';
-const protectedContent = `${controls},${text},[data-scene-protect],article,table,.control-illustration,.pipeline,.studio,.docs-sidebar,.hero-checks,.stack-strip,.footer-bottom,.eyebrow,.mini-label,.architecture-notes,.hero-command,.install-tabs,.code-panel`;
-const svgNS = 'http://www.w3.org/2000/svg';
-
 /** A single decorative SVG viewport shared by every route. React never renders an animation frame. */
 export function SiteBackground() {
   const svgRef = useRef<SVGSVGElement>(null);
-  const maskRef = useRef<SVGGElement>(null);
   const pauseControl = useRef<((paused: boolean) => void) | null>(null);
   const pausedRef = useRef(false);
   const [paused, setPaused] = useState(false);
@@ -32,12 +28,16 @@ export function SiteBackground() {
   const id = `ambient-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
   useEffect(() => {
-    const svg = svgRef.current,
-      mask = maskRef.current;
-    if (!svg || !mask) return;
+    const svg = svgRef.current;
+    if (!svg) return;
     const scene = new AmbientScene();
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     const nodes = [...svg.querySelectorAll<SVGGElement>('[data-object]')];
+    const responseNodes = [...svg.querySelectorAll<SVGGElement>('[data-response-object]')];
+    const halo = svg.querySelector<SVGGElement>('[data-pointer-field]')!;
+    const haloOrbit = halo.querySelector<SVGGElement>('[data-pointer-orbit]')!;
+    const trailNodes = [...svg.querySelectorAll<SVGPathElement>('[data-trail]')];
+    const tetherNodes = [...svg.querySelectorAll<SVGPathElement>('[data-tether]')];
     const waves = [...svg.querySelectorAll<SVGGElement>('[data-wave]')].map((group) => ({
       group,
       rings: [...group.querySelectorAll('circle')],
@@ -49,9 +49,8 @@ export function SiteBackground() {
       inView = false;
     let layoutFrame: number | null = null;
     let gesture: ScenePointerSample | null = null;
-    let protectedRects: DOMRect[] = [];
     let previousCount = -1;
-    let interactions = 0;
+    let interactions = Number(svg.dataset.interactions || 0);
     let previousVisible = -1;
     const canAnimate = () => inView && !document.hidden && !scene.reduced && !pausedRef.current;
     const refreshGeometry = () => {
@@ -60,24 +59,6 @@ export function SiteBackground() {
         height = window.innerHeight;
       scene.viewport(width, height, window.scrollY);
       svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-      // Layout is measured only on scroll/resize/content changes, never on motion frames.
-      const elements = [...document.querySelectorAll(protectedContent)].filter(
-        (el) => !svg.contains(el),
-      );
-      protectedRects = elements
-        .map((el) => el.getBoundingClientRect())
-        .filter((r) => r.width > 0 && r.height > 0 && r.bottom > -20 && r.top < height + 20);
-      const fragment = document.createDocumentFragment();
-      for (const r of protectedRects) {
-        const rect = document.createElementNS(svgNS, 'rect');
-        rect.setAttribute('x', String(r.left - 10));
-        rect.setAttribute('y', String(r.top - 8));
-        rect.setAttribute('width', String(r.width + 20));
-        rect.setAttribute('height', String(r.height + 16));
-        rect.setAttribute('rx', '10');
-        fragment.append(rect);
-      }
-      mask.replaceChildren(fragment);
       svg.dataset.objects = String(scene.objects.length);
     };
     const paint = (seconds = 0) => {
@@ -88,31 +69,84 @@ export function SiteBackground() {
       for (let i = 0; i < nodes.length; i++) {
         const o = scene.objects[i],
           node = nodes[i];
-        const covered =
-          o &&
-          protectedRects.some(
-            (r) =>
-              o.x - 65 > r.left && o.x + 65 < r.right && o.y - 65 > r.top && o.y + 65 < r.bottom,
-          );
-        if (!o?.visible || covered) {
+        const response = responseNodes[i];
+        if (!o?.visible) {
           if (node.style.display !== 'none') node.style.display = 'none';
+          if (response.style.display !== 'none') response.style.display = 'none';
           continue;
         }
         visible++;
         if (node.style.display) node.style.display = '';
         if (keys[i] !== o.key) {
           node.firstElementChild!.setAttribute('href', `#${id}-shape-${o.kind}`);
+          response.firstElementChild!.setAttribute('href', `#${id}-shape-${o.kind}`);
           keys[i] = o.key;
         }
-        node.setAttribute(
-          'transform',
-          `translate(${o.x.toFixed(2)} ${o.y.toFixed(2)}) rotate(${o.rotation.toFixed(2)}) scale(${o.size.toFixed(2)})`,
-        );
+        const transform = `translate(${o.x.toFixed(2)} ${o.y.toFixed(2)}) rotate(${o.rotation.toFixed(2)}) scale(${(o.size * (1 + o.reaction * 0.12)).toFixed(2)})`;
+        node.setAttribute('transform', transform);
+        if (o.reaction > 0.008) {
+          response.style.display = '';
+          response.setAttribute('transform', transform);
+          response.setAttribute('opacity', (o.reaction * 0.7).toFixed(3));
+        } else if (response.style.display !== 'none') response.style.display = 'none';
         node.setAttribute('opacity', o.opacity.toFixed(3));
       }
       if (visible !== previousVisible) {
         svg.dataset.visibleObjects = String(visible);
         previousVisible = visible;
+      }
+      // The pointer lives in client space: it remains under the cursor while the document scrolls.
+      if (scene.pointer.strength > 0.001) {
+        halo.style.display = '';
+        halo.setAttribute('transform', `translate(${scene.pointer.x} ${scene.pointer.y})`);
+        halo.setAttribute('opacity', scene.pointer.strength.toFixed(3));
+        haloOrbit.setAttribute('transform', `rotate(${(scene.clock * 12).toFixed(2)})`);
+      } else if (halo.style.display !== 'none') halo.style.display = 'none';
+      for (let i = 0; i < trailNodes.length; i++) {
+        const a = scene.trail[i],
+          b = scene.trail[i + 1],
+          path = trailNodes[i];
+        if (!a || !b) {
+          if (path.style.display !== 'none') path.style.display = 'none';
+          continue;
+        }
+        path.style.display = '';
+        path.setAttribute('d', `M${a.x} ${a.y} Q${(a.x + b.x) / 2} ${a.y} ${b.x} ${b.y}`);
+        path.setAttribute('opacity', (0.5 * (1 - a.age / AMBIENT.trailLife) ** 2).toFixed(3));
+      }
+      const nearby =
+        scene.pointer.strength > 0.01
+          ? scene.objects
+              .filter(
+                (o) =>
+                  o.visible &&
+                  Math.hypot(o.x - scene.pointer.x, o.y - scene.pointer.y) <
+                    (scene.mobile ? AMBIENT.mobilePointerRadius : AMBIENT.pointerRadius),
+              )
+              .sort(
+                (a, b) =>
+                  Math.hypot(a.x - scene.pointer.x, a.y - scene.pointer.y) -
+                  Math.hypot(b.x - scene.pointer.x, b.y - scene.pointer.y),
+              )
+          : [];
+      for (let i = 0; i < tetherNodes.length; i++) {
+        const o = nearby[i],
+          path = tetherNodes[i];
+        if (!o || (scene.mobile && i >= 3)) {
+          if (path.style.display !== 'none') path.style.display = 'none';
+          continue;
+        }
+        const distance = Math.hypot(o.x - scene.pointer.x, o.y - scene.pointer.y);
+        const radius = scene.mobile ? AMBIENT.mobilePointerRadius : AMBIENT.pointerRadius;
+        path.style.display = '';
+        path.setAttribute(
+          'd',
+          `M${scene.pointer.x} ${scene.pointer.y} Q${(scene.pointer.x + o.x) / 2} ${o.y + Math.sin(scene.clock + i) * 16} ${o.x} ${o.y}`,
+        );
+        path.setAttribute(
+          'opacity',
+          (0.32 * scene.pointer.strength * (1 - distance / radius) ** 2).toFixed(3),
+        );
       }
       for (let i = 0; i < waves.length; i++) {
         const wave = waves[i],
@@ -123,15 +157,15 @@ export function SiteBackground() {
         }
         wave.group.style.display = '';
         const progress = burst.age / AMBIENT.burstLife;
-        const radius = (scene.mobile ? 140 : 215) * (1 - (1 - progress) ** 2);
+        const radius = waveRadius(burst.age, scene.mobile);
         const alpha = Math.sin(Math.PI * progress) * (1 - progress) * burst.power;
         wave.group.setAttribute(
           'transform',
           `translate(${burst.x} ${burst.worldY - scene.scroll})`,
         );
-        wave.group.setAttribute('opacity', (alpha * 0.8).toFixed(3));
+        wave.group.setAttribute('opacity', (alpha * 1.05).toFixed(3));
         wave.rings.forEach((ring, n) =>
-          ring.setAttribute('r', Math.max(0, radius - n * 15).toFixed(2)),
+          ring.setAttribute('r', Math.max(0, radius - Math.max(0, n - 1) * 20).toFixed(2)),
         );
         wave.particles.forEach((particle, n) => {
           const angle = (n / AMBIENT.sparks) * Math.PI * 2 + burst.seed * 3;
@@ -179,7 +213,7 @@ export function SiteBackground() {
       paint();
     };
     const ignored = (target: EventTarget | null) =>
-      target instanceof Element && !!target.closest(`${controls},${text}`);
+      target instanceof Element && !!target.closest(controls);
     const move = (event: PointerEvent) => {
       if (
         gesture &&
@@ -187,10 +221,6 @@ export function SiteBackground() {
       )
         gesture = null;
       if (event.pointerType === 'touch' || !event.isPrimary || !canAnimate()) return;
-      if (ignored(event.target)) {
-        scene.leavePointer();
-        return;
-      }
       scene.movePointer(event.clientX, event.clientY);
     };
     const down = (event: PointerEvent) => {
@@ -218,11 +248,14 @@ export function SiteBackground() {
         })
       )
         return;
+      // A scroll event can precede its next animation frame; never use stale document coordinates.
+      if (dirty) refreshGeometry();
       if (scene.tap(event.clientX, event.clientY))
         svg.dataset.interactions = String(++interactions);
     };
     const scroll = () => {
-      leave();
+      gesture = null;
+      if (scene.pointer.active && canAnimate()) scene.movePointer(scene.pointer.x, scene.pointer.y);
       invalidate();
     };
     const visibility = () => {
@@ -232,9 +265,6 @@ export function SiteBackground() {
       else dirty = true;
       syncActivity();
       if (!document.hidden) paint();
-    };
-    const layoutChanged = (event: Event) => {
-      if (event.target instanceof Element && !svg.contains(event.target)) invalidate();
     };
     pauseControl.current = (value) => {
       pausedRef.current = value;
@@ -254,26 +284,15 @@ export function SiteBackground() {
       syncActivity();
     });
     viewport.observe(svg);
-    // Accordion changes and font loads can reposition protection without a route change.
-    const content = new MutationObserver(invalidate);
-    const main = document.querySelector('main');
-    if (main)
-      content.observe(main, {
-        subtree: true,
-        childList: true,
-        attributes: true,
-        attributeFilter: ['open'],
-      });
-    const passive = { passive: true } as const;
+    const passive = { passive: true, capture: true } as const;
     window.addEventListener('pointermove', move, passive);
     window.addEventListener('pointerdown', down, passive);
     window.addEventListener('pointerup', up, passive);
-    document.documentElement.addEventListener('pointerleave', leave, passive);
+    document.documentElement.addEventListener('pointerleave', leave, { passive: true });
     window.addEventListener('pointercancel', leave, passive);
     window.addEventListener('scroll', scroll, passive);
     window.addEventListener('resize', invalidate, passive);
     document.addEventListener('visibilitychange', visibility);
-    document.addEventListener('transitionend', layoutChanged, passive);
     motion.addEventListener('change', preference);
     document.fonts.ready.then(() => {
       if (!disposed) invalidate();
@@ -285,16 +304,14 @@ export function SiteBackground() {
       pauseControl.current = null;
       sizes.disconnect();
       viewport.disconnect();
-      content.disconnect();
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerdown', down);
-      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointermove', move, true);
+      window.removeEventListener('pointerdown', down, true);
+      window.removeEventListener('pointerup', up, true);
       document.documentElement.removeEventListener('pointerleave', leave);
-      window.removeEventListener('pointercancel', leave);
-      window.removeEventListener('scroll', scroll);
-      window.removeEventListener('resize', invalidate);
+      window.removeEventListener('pointercancel', leave, true);
+      window.removeEventListener('scroll', scroll, true);
+      window.removeEventListener('resize', invalidate, true);
       document.removeEventListener('visibilitychange', visibility);
-      document.removeEventListener('transitionend', layoutChanged);
       motion.removeEventListener('change', preference);
     };
   }, [pathname, id]);
@@ -340,30 +357,56 @@ export function SiteBackground() {
             <circle r="3" />
             <path d="M-8-25v7m0-7h7" />
           </g>
-          <mask
-            id={`${id}-mask`}
-            maskUnits="userSpaceOnUse"
-            style={{ maskType: 'luminance' }}
-            x="0"
-            y="0"
-            width="100%"
-            height="100%"
-          >
-            <rect width="100%" height="100%" fill="white" stroke="none" />
-            <g ref={maskRef} fill="black" stroke="none" />
-          </mask>
+          <radialGradient id={`${id}-glow`}>
+            <stop offset="0" stopColor="currentColor" stopOpacity=".14" />
+            <stop offset=".35" stopColor="currentColor" stopOpacity=".06" />
+            <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+          </radialGradient>
         </defs>
-        <g mask={`url(#${id}-mask)`}>
+        <g className="ambient-field">
           {slots.map((i) => (
             <g key={i} data-object="" style={{ display: 'none' }}>
+              <use href={`#${id}-shape-0`} />
+            </g>
+          ))}
+        </g>
+        <g className="ambient-response">
+          <g data-pointer-field="" opacity="0">
+            <circle r="175" fill={`url(#${id}-glow)`} stroke="none" />
+            <g data-pointer-orbit="" opacity=".28">
+              <circle r="31" strokeDasharray="12 86" />
+              <circle r="57" strokeDasharray="2 44" />
+            </g>
+            <circle r="2" opacity=".5" fill="currentColor" stroke="none" />
+          </g>
+          {Array.from({ length: AMBIENT.maxTrail - 1 }, (_, i) => (
+            <path
+              key={`trail-${i}`}
+              data-trail=""
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              style={{ display: 'none' }}
+            />
+          ))}
+          {Array.from({ length: AMBIENT.connections }, (_, i) => (
+            <path key={`tether-${i}`} data-tether="" strokeWidth=".8" style={{ display: 'none' }} />
+          ))}
+          {slots.map((i) => (
+            <g
+              key={`response-${i}`}
+              data-response-object=""
+              strokeWidth="1.15"
+              style={{ display: 'none' }}
+            >
               <use href={`#${id}-shape-0`} />
             </g>
           ))}
           <g className="ambient-waves" strokeWidth="1">
             {burstSlots.map((i) => (
               <g key={i} data-wave="" style={{ display: 'none' }}>
-                <circle r="0" />
-                <circle r="0" strokeDasharray="2 10" />
+                <circle r="0" strokeWidth="10" opacity=".1" />
+                <circle r="0" strokeWidth="1.5" />
+                <circle r="0" strokeDasharray="2 10" opacity=".6" />
                 {sparks.map((n) => (
                   <use key={n} href={`#${id}-shape-${n % 2 ? 2 : 5}`} />
                 ))}
