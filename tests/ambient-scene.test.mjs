@@ -266,3 +266,104 @@ test('overlapping impulses never launch geometry beyond the displacement budget'
   runFor(s, 4);
   assert(s.objects.every((o) => o.reaction < 0.0001));
 });
+
+test('a nearby object sweeps around the pointer rather than only moving radially', () => {
+  const s = sceneAt();
+  const o = s.objects.find(
+    (o) =>
+      o.visible &&
+      o.depth > 0.7 &&
+      o.kind % 2 === 0 &&
+      o.x > 150 &&
+      o.x < 1100 &&
+      o.y > 150 &&
+      o.y < 650,
+  );
+  assert(o);
+  const px = o.x - 80,
+    py = o.y;
+  const angles = [];
+  for (let i = 0; i < 150; i++) {
+    s.movePointer(px, py);
+    s.advance(1 / 60);
+    angles.push(Math.atan2(o.y - py, o.x - px));
+  }
+  const sweep = Math.max(...angles) - Math.min(...angles);
+  assert(sweep > 0.5, `angular sweep was only ${sweep.toFixed(3)} radians`);
+});
+
+function relayFixture(withNeighbours = true) {
+  const s = sceneAt();
+  const original = s.objects.find((o) => o.visible && o.depth > 0.7);
+  const positions = withNeighbours ? [240, 380, 520, 660] : [520];
+  s.objects = positions.map((x, i) => ({
+    ...original,
+    key: `fixture-${i}`,
+    seed: 0,
+    baseX: x,
+    worldY: 380,
+    x,
+    y: 400,
+    offsetX: 0,
+    offsetY: 0,
+  }));
+  s.tap(100, 400);
+  return s;
+}
+test('a click reaches distant geometry through neighbours, but not across an empty gap', () => {
+  const linked = relayFixture(),
+    isolated = relayFixture(false);
+  let linkedPeak = 0,
+    isolatedPeak = 0;
+  for (let i = 0; i < 180; i++) {
+    linked.advance(1 / 60);
+    isolated.advance(1 / 60);
+    linkedPeak = Math.max(
+      linkedPeak,
+      Math.hypot(linked.objects[2].offsetX, linked.objects[2].offsetY),
+    );
+    isolatedPeak = Math.max(
+      isolatedPeak,
+      Math.hypot(isolated.objects[0].offsetX, isolated.objects[0].offsetY),
+    );
+  }
+  assert(linkedPeak > 1, `chain displacement was only ${linkedPeak.toFixed(3)}px`);
+  assert(isolatedPeak < 0.001);
+});
+
+test('cascades have bounded fanout, depth and lifetime on desktop and mobile', () => {
+  for (const width of [375, 1440]) {
+    const s = sceneAt(width);
+    let sawRelay = false;
+    for (let i = 0; i < 800; i++) {
+      if (i < 250 && i % 5 === 0) s.tap((i * 37) % width, (i * 23) % 900);
+      s.advance(1 / 120);
+      sawRelay ||= s.relays.length > 0;
+      assert(s.relays.length <= (s.mobile ? AMBIENT.mobileRelays : AMBIENT.maxRelays));
+      for (const r of s.relays) {
+        assert(r.hop <= AMBIENT.cascadeHops);
+        assert(r.children <= 2);
+        assert(
+          r.cascade.visited.size <= (s.mobile ? AMBIENT.mobileCascadeNodes : AMBIENT.cascadeNodes),
+        );
+      }
+    }
+    assert(sawRelay);
+    assert.equal(s.relays.length, 0);
+  }
+  const reduced = relayFixture();
+  runFor(reduced, 0.5);
+  assert(reduced.relays.length > 0);
+  reduced.setReduced(true);
+  assert.equal(reduced.relays.length, 0);
+  runFor(reduced, 4);
+  assert.equal(reduced.relays.length, 0);
+});
+
+test('clicking a shape directly starts its own relay without waiting for another neighbour', () => {
+  const s = relayFixture();
+  s.clearEffects();
+  s.tap(240, 400);
+  runFor(s, 0.25);
+  assert(s.relays.some((r) => r.source === 'fixture-0'));
+});

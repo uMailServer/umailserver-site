@@ -7,6 +7,7 @@ import {
   AmbientScene,
   isSceneTap,
   waveRadius,
+  relayRadius,
   SceneLoop,
   type ScenePointerSample,
 } from '@/lib/ambient-scene';
@@ -43,6 +44,11 @@ export function SiteBackground() {
       rings: [...group.querySelectorAll('circle')],
       particles: [...group.querySelectorAll('use')],
     }));
+    const relayNodes = [...svg.querySelectorAll<SVGGElement>('[data-relay]')].map((group) => ({
+      group,
+      ring: group.querySelector('circle')!,
+      link: group.querySelector('path')!,
+    }));
     const keys: string[] = [];
     let dirty = true,
       disposed = false,
@@ -50,6 +56,7 @@ export function SiteBackground() {
     let layoutFrame: number | null = null;
     let gesture: ScenePointerSample | null = null;
     let previousCount = -1;
+    let previousRelays = -1;
     let interactions = Number(svg.dataset.interactions || 0);
     let previousVisible = -1;
     const canAnimate = () => inView && !document.hidden && !scene.reduced && !pausedRef.current;
@@ -175,6 +182,32 @@ export function SiteBackground() {
             `translate(${(Math.cos(angle) * travel).toFixed(2)} ${(Math.sin(angle) * travel).toFixed(2)}) rotate(${angle * 30}) scale(${0.22 * (1 - progress) + 0.08})`,
           );
         });
+      }
+      for (let i = 0; i < relayNodes.length; i++) {
+        const node = relayNodes[i],
+          r = scene.relays[i];
+        if (!r) {
+          if (node.group.style.display !== 'none') node.group.style.display = 'none';
+          continue;
+        }
+        node.group.style.display = '';
+        const progress = r.age / AMBIENT.relayLife;
+        node.group.setAttribute('transform', `translate(${r.x} ${r.worldY - scene.scroll})`);
+        node.group.setAttribute(
+          'opacity',
+          (Math.sin(Math.PI * progress) * (1 - progress) * r.power * 0.65).toFixed(3),
+        );
+        node.ring.setAttribute('r', relayRadius(r.age, scene.mobile).toFixed(2));
+        const dx = r.fromX - r.x,
+          dy = r.fromWorldY - r.worldY;
+        node.link.setAttribute(
+          'd',
+          `M${dx} ${dy} Q${dx * 0.5 - dy * 0.12} ${dy * 0.5 + dx * 0.12} 0 0`,
+        );
+      }
+      if (previousRelays !== scene.relays.length) {
+        svg.dataset.relays = String(scene.relays.length);
+        previousRelays = scene.relays.length;
       }
       if (previousCount !== scene.bursts.length) {
         svg.dataset.bursts = String(scene.bursts.length);
@@ -399,6 +432,12 @@ export function SiteBackground() {
               style={{ display: 'none' }}
             >
               <use href={`#${id}-shape-0`} />
+            </g>
+          ))}
+          {Array.from({ length: AMBIENT.maxRelays }, (_, i) => (
+            <g key={`relay-${i}`} data-relay="" style={{ display: 'none' }} strokeWidth=".9">
+              <path strokeLinecap="round" />
+              <circle r="0" strokeDasharray="3 9" />
             </g>
           ))}
           <g className="ambient-waves" strokeWidth="1">

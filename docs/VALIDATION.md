@@ -65,6 +65,14 @@ This revision replaces the rectangular content masks in the preceding implementa
 - Explicit pause preserved five sampled SVG transforms across separate observations; resume and a real CTA route transition retained one running SVG. Final formatting, typecheck, 14 tests and the production export check passed (10 HTML pages, 3,588 internal links/assets).
 - Light/dark, mobile, text selection, card and section-boundary screenshots were reviewed. Final exercised browser logs contain no errors/warnings. Native reduced-motion media emulation and hidden-tab transitions remain unavailable through this browser; their model/scheduler behavior is tested and event wiring reviewed.
 
+## Organic orbits and neighbour cascades
+
+- The existing 14 tests passed before this revision. Two new behavioral cases initially failed on the old engine: the selected nearby shape swept only 0.150 radians, and geometry beyond the primary wave had zero response through neighbours. Both now pass; the isolated-gap control remains unaffected.
+- Eighteen model tests pass, including direct-on-shape seeding, bounded fanout/depth, desktop/mobile limits, expiry, reduced-motion clearing, primary-wave strength and prior input/scheduler/geometry controls.
+- The field now rotates displacement targets with depth-dependent speeds and a slow breathing term. Relay influence propagates through visible shapes, with decaying power, per-cascade visited keys, two child links per source, two additional hops, nine/five nodes, 12/6 active relays and a 3.2-second hard lifetime. Each relay lasts 0.72 seconds. Echo forces yield smoothly while the stronger primary wave is passing.
+- The renderer reuses 12 SVG relay groups for low-alpha connector traces and local rings in the existing response layer. Existing opacity, displacement, trail and population budgets remain in place. No new package, rectangular mask, per-frame layout read or React render is introduced.
+- Focused browser checks pass at 375, 1440 and 3840px in both themes: correct actual viewport, no overflow, one SVG, 12 reusable relay slots and `pointer-events: none`. A real click produced a visible SVG relay and connector; transient relays subsequently returned to zero. Theme controls did not add click signals, pause cleared relays, resume worked, and the exercised console log was empty. Light/dark card screenshots remain readable. Final formatting, typecheck, production build and export checks passed (10 HTML pages, 3,588 internal links/assets).
+
 ## Publication boundary
 
 The implementation build and GitHub Pages deployment passed in [run 39125180092](https://github.com/uMailServer/umailserver-site/actions/runs/39125180092), for application revision `453320a`. The custom domain is set to `umailserver.com`.
