@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { Icon, Logo } from './icons';
 import Link from 'next/link';
+import { AnimationToggle } from './animation-control';
 
 type Theme = 'light' | 'dark' | 'system';
 const themeIcon = { light: 'sun', dark: 'moon', system: 'monitor' };
@@ -144,6 +145,7 @@ export function Header() {
               </div>
             )}
           </div>
+          <AnimationToggle />
           <a className="github-header" href="https://github.com/uMailServer/uMailServer">
             <Icon name="github" size={19} />
             <span>GitHub</span>

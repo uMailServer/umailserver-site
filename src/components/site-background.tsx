@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { useAnimationPreference } from './animation-control';
 import {
   AMBIENT,
   AmbientScene,
@@ -19,12 +20,13 @@ const controls =
   'a,button,input,select,textarea,summary,label,[role="button"],[role="link"],[role="radio"],[role="tab"],[role="menuitem"],[contenteditable]:not([contenteditable="false"]),[data-background-ignore]';
 /** A single decorative SVG viewport shared by every route. React never renders an animation frame. */
 export function SiteBackground() {
+  const enabled = useAnimationPreference();
+  return enabled ? <AnimatedBackground /> : null;
+}
+
+// Disabling unmounts this runtime: every RAF, observer and input listener is disposed.
+function AnimatedBackground() {
   const svgRef = useRef<SVGSVGElement>(null);
-  const pauseControl = useRef<((paused: boolean) => void) | null>(null);
-  const pausedRef = useRef(false);
-  const [paused, setPaused] = useState(false);
-  const [reduced, setReduced] = useState(false);
-  const [ready, setReady] = useState(false);
   const pathname = usePathname();
   const id = `ambient-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
@@ -32,7 +34,6 @@ export function SiteBackground() {
     const svg = svgRef.current;
     if (!svg) return;
     const scene = new AmbientScene();
-    const motion = matchMedia('(prefers-reduced-motion: reduce)');
     const nodes = [...svg.querySelectorAll<SVGGElement>('[data-object]')];
     const responseNodes = [...svg.querySelectorAll<SVGGElement>('[data-response-object]')];
     const halo = svg.querySelector<SVGGElement>('[data-pointer-field]')!;
@@ -59,7 +60,7 @@ export function SiteBackground() {
     let previousRelays = -1;
     let interactions = Number(svg.dataset.interactions || 0);
     let previousVisible = -1;
-    const canAnimate = () => inView && !document.hidden && !scene.reduced && !pausedRef.current;
+    const canAnimate = () => inView && !document.hidden;
     const refreshGeometry = () => {
       dirty = false;
       const width = document.documentElement.clientWidth,
@@ -221,10 +222,12 @@ export function SiteBackground() {
       paint,
     });
     const syncActivity = () => {
+      if (disposed) return;
       loop.setActive(canAnimate());
-      svg.dataset.sceneState = scene.reduced ? 'reduced' : canAnimate() ? 'running' : 'paused';
+      svg.dataset.sceneState = canAnimate() ? 'running' : 'paused';
     };
     const invalidate = () => {
+      if (disposed) return;
       dirty = true;
       if (!canAnimate() && layoutFrame === null && !document.hidden) {
         layoutFrame = requestAnimationFrame(() => {
@@ -236,14 +239,6 @@ export function SiteBackground() {
     const leave = () => {
       scene.leavePointer();
       gesture = null;
-    };
-    const preference = () => {
-      scene.setReduced(motion.matches);
-      setReduced(motion.matches);
-      leave();
-      dirty = true;
-      syncActivity();
-      paint();
     };
     const ignored = (target: EventTarget | null) =>
       target instanceof Element && !!target.closest(controls);
@@ -299,19 +294,13 @@ export function SiteBackground() {
       syncActivity();
       if (!document.hidden) paint();
     };
-    pauseControl.current = (value) => {
-      pausedRef.current = value;
-      scene.clearEffects();
-      leave();
-      syncActivity();
-      paint();
-    };
-    preference();
-    setReady(true);
+    refreshGeometry();
+    syncActivity();
     svg.dataset.ready = 'true';
     const sizes = new ResizeObserver(invalidate);
     sizes.observe(document.body);
     const viewport = new IntersectionObserver((entries) => {
+      if (disposed) return;
       inView = entries.some((entry) => entry.isIntersecting);
       if (!inView) scene.clearEffects();
       syncActivity();
@@ -326,15 +315,14 @@ export function SiteBackground() {
     window.addEventListener('scroll', scroll, passive);
     window.addEventListener('resize', invalidate, passive);
     document.addEventListener('visibilitychange', visibility);
-    motion.addEventListener('change', preference);
     document.fonts.ready.then(() => {
       if (!disposed) invalidate();
     });
     return () => {
       disposed = true;
+      scene.clearEffects();
       loop.dispose();
       if (layoutFrame !== null) cancelAnimationFrame(layoutFrame);
-      pauseControl.current = null;
       sizes.disconnect();
       viewport.disconnect();
       window.removeEventListener('pointermove', move, true);
@@ -345,141 +333,112 @@ export function SiteBackground() {
       window.removeEventListener('scroll', scroll, true);
       window.removeEventListener('resize', invalidate, true);
       document.removeEventListener('visibilitychange', visibility);
-      motion.removeEventListener('change', preference);
     };
   }, [pathname, id]);
 
   return (
-    <>
-      <svg
-        ref={svgRef}
-        className="site-background"
-        aria-hidden="true"
-        focusable="false"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth=".8"
-      >
-        <defs>
-          <g id={`${id}-shape-0`}>
-            <circle r="17" />
-            <path d="M-29 0h5M24 0h5M0-29v5M0 24v5" />
+    <svg
+      ref={svgRef}
+      className="site-background"
+      aria-hidden="true"
+      focusable="false"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth=".8"
+    >
+      <defs>
+        <g id={`${id}-shape-0`}>
+          <circle r="17" />
+          <path d="M-29 0h5M24 0h5M0-29v5M0 24v5" />
+        </g>
+        <g id={`${id}-shape-1`}>
+          <path d="m0-15 15 15-15 15L-15 0Z M0-7l7 7-7 7-7-7Z" />
+        </g>
+        <g id={`${id}-shape-2`}>
+          <path d="M-9 0H9M0-9V9" />
+          <circle r="2" />
+        </g>
+        <g id={`${id}-shape-3`}>
+          <path d="M-42 12h36Q6 12 6 0T18-12h24" />
+          <circle cx="-44" cy="12" r="2" />
+          <circle cx="44" cy="-12" r="2" />
+        </g>
+        <g id={`${id}-shape-4`}>
+          <rect x="-12" y="-12" width="24" height="24" rx="6" />
+          <path d="M-19 19h12M-19 7v12" />
+        </g>
+        <g id={`${id}-shape-5`}>
+          <rect x="-10" y="-7" width="20" height="14" rx="2" />
+          <path d="m-9-6 9 8 9-8M-9 6l6-6m12 6L3 0" />
+        </g>
+        <g id={`${id}-shape-6`}>
+          <ellipse rx="29" ry="10" transform="rotate(-30)" />
+          <circle r="3" />
+          <path d="M-8-25v7m0-7h7" />
+        </g>
+        <radialGradient id={`${id}-glow`}>
+          <stop offset="0" stopColor="currentColor" stopOpacity=".14" />
+          <stop offset=".35" stopColor="currentColor" stopOpacity=".06" />
+          <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <g className="ambient-field">
+        {slots.map((i) => (
+          <g key={i} data-object="" style={{ display: 'none' }}>
+            <use href={`#${id}-shape-0`} />
           </g>
-          <g id={`${id}-shape-1`}>
-            <path d="m0-15 15 15-15 15L-15 0Z M0-7l7 7-7 7-7-7Z" />
+        ))}
+      </g>
+      <g className="ambient-response">
+        <g data-pointer-field="" opacity="0">
+          <circle r="175" fill={`url(#${id}-glow)`} stroke="none" />
+          <g data-pointer-orbit="" opacity=".28">
+            <circle r="31" strokeDasharray="12 86" />
+            <circle r="57" strokeDasharray="2 44" />
           </g>
-          <g id={`${id}-shape-2`}>
-            <path d="M-9 0H9M0-9V9" />
-            <circle r="2" />
+          <circle r="2" opacity=".5" fill="currentColor" stroke="none" />
+        </g>
+        {Array.from({ length: AMBIENT.maxTrail - 1 }, (_, i) => (
+          <path
+            key={`trail-${i}`}
+            data-trail=""
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            style={{ display: 'none' }}
+          />
+        ))}
+        {Array.from({ length: AMBIENT.connections }, (_, i) => (
+          <path key={`tether-${i}`} data-tether="" strokeWidth=".8" style={{ display: 'none' }} />
+        ))}
+        {slots.map((i) => (
+          <g
+            key={`response-${i}`}
+            data-response-object=""
+            strokeWidth="1.15"
+            style={{ display: 'none' }}
+          >
+            <use href={`#${id}-shape-0`} />
           </g>
-          <g id={`${id}-shape-3`}>
-            <path d="M-42 12h36Q6 12 6 0T18-12h24" />
-            <circle cx="-44" cy="12" r="2" />
-            <circle cx="44" cy="-12" r="2" />
+        ))}
+        {Array.from({ length: AMBIENT.maxRelays }, (_, i) => (
+          <g key={`relay-${i}`} data-relay="" style={{ display: 'none' }} strokeWidth=".9">
+            <path strokeLinecap="round" />
+            <circle r="0" strokeDasharray="3 9" />
           </g>
-          <g id={`${id}-shape-4`}>
-            <rect x="-12" y="-12" width="24" height="24" rx="6" />
-            <path d="M-19 19h12M-19 7v12" />
-          </g>
-          <g id={`${id}-shape-5`}>
-            <rect x="-10" y="-7" width="20" height="14" rx="2" />
-            <path d="m-9-6 9 8 9-8M-9 6l6-6m12 6L3 0" />
-          </g>
-          <g id={`${id}-shape-6`}>
-            <ellipse rx="29" ry="10" transform="rotate(-30)" />
-            <circle r="3" />
-            <path d="M-8-25v7m0-7h7" />
-          </g>
-          <radialGradient id={`${id}-glow`}>
-            <stop offset="0" stopColor="currentColor" stopOpacity=".14" />
-            <stop offset=".35" stopColor="currentColor" stopOpacity=".06" />
-            <stop offset="1" stopColor="currentColor" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <g className="ambient-field">
-          {slots.map((i) => (
-            <g key={i} data-object="" style={{ display: 'none' }}>
-              <use href={`#${id}-shape-0`} />
+        ))}
+        <g className="ambient-waves" strokeWidth="1">
+          {burstSlots.map((i) => (
+            <g key={i} data-wave="" style={{ display: 'none' }}>
+              <circle r="0" strokeWidth="10" opacity=".1" />
+              <circle r="0" strokeWidth="1.5" />
+              <circle r="0" strokeDasharray="2 10" opacity=".6" />
+              {sparks.map((n) => (
+                <use key={n} href={`#${id}-shape-${n % 2 ? 2 : 5}`} />
+              ))}
             </g>
           ))}
         </g>
-        <g className="ambient-response">
-          <g data-pointer-field="" opacity="0">
-            <circle r="175" fill={`url(#${id}-glow)`} stroke="none" />
-            <g data-pointer-orbit="" opacity=".28">
-              <circle r="31" strokeDasharray="12 86" />
-              <circle r="57" strokeDasharray="2 44" />
-            </g>
-            <circle r="2" opacity=".5" fill="currentColor" stroke="none" />
-          </g>
-          {Array.from({ length: AMBIENT.maxTrail - 1 }, (_, i) => (
-            <path
-              key={`trail-${i}`}
-              data-trail=""
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              style={{ display: 'none' }}
-            />
-          ))}
-          {Array.from({ length: AMBIENT.connections }, (_, i) => (
-            <path key={`tether-${i}`} data-tether="" strokeWidth=".8" style={{ display: 'none' }} />
-          ))}
-          {slots.map((i) => (
-            <g
-              key={`response-${i}`}
-              data-response-object=""
-              strokeWidth="1.15"
-              style={{ display: 'none' }}
-            >
-              <use href={`#${id}-shape-0`} />
-            </g>
-          ))}
-          {Array.from({ length: AMBIENT.maxRelays }, (_, i) => (
-            <g key={`relay-${i}`} data-relay="" style={{ display: 'none' }} strokeWidth=".9">
-              <path strokeLinecap="round" />
-              <circle r="0" strokeDasharray="3 9" />
-            </g>
-          ))}
-          <g className="ambient-waves" strokeWidth="1">
-            {burstSlots.map((i) => (
-              <g key={i} data-wave="" style={{ display: 'none' }}>
-                <circle r="0" strokeWidth="10" opacity=".1" />
-                <circle r="0" strokeWidth="1.5" />
-                <circle r="0" strokeDasharray="2 10" opacity=".6" />
-                {sparks.map((n) => (
-                  <use key={n} href={`#${id}-shape-${n % 2 ? 2 : 5}`} />
-                ))}
-              </g>
-            ))}
-          </g>
-        </g>
-      </svg>
-      <button
-        type="button"
-        className="site-motion-toggle"
-        hidden={!ready || reduced}
-        aria-label={paused ? 'Resume background animation' : 'Pause background animation'}
-        aria-pressed={paused}
-        onClick={() => {
-          const next = !paused;
-          setPaused(next);
-          pauseControl.current?.(next);
-        }}
-      >
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          {paused ? (
-            <path d="m5 3 8 5-8 5V3Z" stroke="currentColor" strokeLinejoin="round" />
-          ) : (
-            <path
-              d="M5 3v10M11 3v10"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          )}
-        </svg>
-        <span>{paused ? 'Resume motion' : 'Pause motion'}</span>
-      </button>
-    </>
+      </g>
+    </svg>
   );
 }

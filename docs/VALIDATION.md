@@ -73,6 +73,15 @@ This revision replaces the rectangular content masks in the preceding implementa
 - The renderer reuses 12 SVG relay groups for low-alpha connector traces and local rings in the existing response layer. Existing opacity, displacement, trail and population budgets remain in place. No new package, rectangular mask, per-frame layout read or React render is introduced.
 - Focused browser checks pass at 375, 1440 and 3840px in both themes: correct actual viewport, no overflow, one SVG, 12 reusable relay slots and `pointer-events: none`. A real click produced a visible SVG relay and connector; transient relays subsequently returned to zero. Theme controls did not add click signals, pause cleared relays, resume worked, and the exercised console log was empty. Light/dark card screenshots remain readable. Final formatting, typecheck, production build and export checks passed (10 HTML pages, 3,588 internal links/assets).
 
+## Header animation preference
+
+- The old floating pause control is replaced by a 44×44px mouse button beside the theme picker. Its Turkish title/accessible label and pressed state reflect the action; off has a muted, slashed icon. The switch controls only the shared SVG background and its mouse/tap effects.
+- Off unmounts the scene, clears waves/trails/relays, cancels animation and pending layout frames, disconnects both observers and removes the scene's global input/geometry/visibility listeners. Disposal guards prevent queued observer callbacks from restarting work. On creates a fresh runtime. Preference storage/media-query watchers remain independent so system and cross-tab changes can still update the control.
+- Five new native Node tests cover first-use reduced-motion defaults, explicit saved overrides, persistence across store instances, shared subscription cleanup, cross-tab updates/clear, and blocked storage. Together with the unchanged ambient tests: 23 passed, zero failures/skips.
+- Browser checks passed at 320, 375, 768, 1440 and 3840px in both themes: actual requested viewport, no horizontal overflow or brand/actions overlap, and a 44×44px target. Off removes the SVG, remains off after reload and a real mobile documentation navigation; Space/Enter toggle it with focus retained. Restart produces one running SVG with zero active waves. Theme selection and mobile menu work while off. Exercised browser warning/error log was empty.
+- First-use OS preference changes and inaccessible storage are tested through the injected preference host. Native OS media emulation remains unavailable in the browser controls; that event wiring is source-reviewed rather than claimed as a live browser pass.
+- Production export check passes: 10 HTML pages and 308 internal links/assets. The SVG now mounts only after resolving the client preference, so exported HTML contains no transient background symbols; static content/SEO remain exported.
+
 ## Publication boundary
 
 The implementation build and GitHub Pages deployment passed in [run 39125180092](https://github.com/uMailServer/umailserver-site/actions/runs/39125180092), for application revision `453320a`. The custom domain is set to `umailserver.com`.
