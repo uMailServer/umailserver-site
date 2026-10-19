@@ -91,6 +91,16 @@ This revision supersedes the initial mouse toggle's full-scene removal described
 - All 26 native tests passed, including three new cases: quiet objects continue moving while disabled inputs are ignored and effects cleared; mouse effects can restart without losing the scene clock; reduced motion freezes the quiet field independently; and system motion changes remain observable with a saved mouse-off preference (the first case includes restart coverage).
 - Production browser observations: switching off cleared waves to zero while the scene stayed running; eight sampled object transforms changed between observations; a new real click did not increase the interaction count. Reload restored mouse-off with a running quiet scene. At 375px in dark mode, Space re-enabled input, turning it off again kept scrolling functional, and the warning/error log was empty. Light desktop behavior was also exercised. Native OS media emulation remains unavailable; system-default and reduced-motion behavior are unit-tested and event wiring is source-reviewed.
 
+## MammothEngine OXOG footer alignment
+
+19 October 2026. This replaces the earlier NineDeploy-inspired studio area.
+
+- The live MammothEngine HTML, CSS and rendered OXOG card were inspected. The replacement keeps the reference's exact text and one full-card link to `https://oxog.net`, four SVG paths, stroke widths/colors, seven-pixel radius, spacing, arrow and responsive rules. Additional studio copy, wordmark and four project tiles are removed. Site sections and the existing product/legal footer remain outside this change.
+- Space Grotesk Variable 5.3.0 is self-hosted for the studio heading only; its OFL license is included. The reference's warm light/dark colors are scoped to the card.
+- At an actual 1440px viewport, the card width/height match the reference (1295.39×160.67px), as do the heading's family, weight, 35px size, 39.2px line height, -1.575px letter spacing and 349.67px text width. Logo dimensions match at 105×68.25px. SVG animation duration, easing, infinite iteration and delays match: 6s ease-in-out with 0/.15/.3/.45s stagger; draw offset 400 to zero by 33%.
+- Local production checks at 320, 375, 768, 1440 and 3840px in both themes passed: no document overflow, four SVG paths, one studio link and no project tiles. Card heights are 234.19 / 206.19 / 194.34 / 160.67 / 160.67px at those widths. Mobile/light and desktop/dark screenshots were reviewed. Exercised browser error/warning log was empty.
+- The logo runs while visible even with mouse effects off. Scrolling it out of view changes its state to paused, and sampled path offsets remain frozen; returning resumes drawing. OS reduced-motion and document-hidden event wiring is source-reviewed; native emulation remains unavailable through this browser.
+
 ## Publication boundary
 
 The implementation build and GitHub Pages deployment passed in [run 39125180092](https://github.com/uMailServer/umailserver-site/actions/runs/39125180092), for application revision `453320a`. The custom domain is set to `umailserver.com`.

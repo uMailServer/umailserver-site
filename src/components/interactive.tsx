@@ -303,22 +303,30 @@ export function MotionObserver() {
     if (!('IntersectionObserver' in window)) return;
     const logos = document.querySelectorAll<SVGElement>('.oxog-symbol');
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    logos.forEach((logo) => {
-      if (!motion.matches) logo.dataset.motion = 'waiting';
-    });
-    const reduceMotion = () => {
-      if (motion.matches)
-        logos.forEach((logo) => {
-          delete logo.dataset.motion;
-        });
+    const visible = new Map<SVGElement, boolean>();
+    const updateLogo = (logo: SVGElement) => {
+      if (motion.matches) delete logo.dataset.motion;
+      else logo.dataset.motion = visible.get(logo) && !document.hidden ? 'drawing' : 'paused';
     };
-    motion.addEventListener('change', reduceMotion);
+    const updateLogos = () => logos.forEach(updateLogo);
+    updateLogos();
+    motion.addEventListener('change', updateLogos);
+    document.addEventListener('visibilitychange', updateLogos);
+    const logoObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const logo = entry.target as SVGElement;
+          visible.set(logo, entry.isIntersecting);
+          updateLogo(logo);
+        });
+      },
+      { threshold: 0.12 },
+    );
+    logos.forEach((logo) => logoObserver.observe(logo));
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            if (entry.target instanceof SVGElement && !motion.matches)
-              entry.target.dataset.motion = 'drawing';
             entry.target.classList.add('in-view');
             observer.unobserve(entry.target);
           }
@@ -326,10 +334,12 @@ export function MotionObserver() {
       },
       { threshold: 0.12 },
     );
-    document.querySelectorAll('.reveal, .oxog-symbol').forEach((el) => observer.observe(el));
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
     return () => {
       observer.disconnect();
-      motion.removeEventListener('change', reduceMotion);
+      logoObserver.disconnect();
+      motion.removeEventListener('change', updateLogos);
+      document.removeEventListener('visibilitychange', updateLogos);
       logos.forEach((logo) => {
         delete logo.dataset.motion;
       });

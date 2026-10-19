@@ -143,7 +143,7 @@ export function Logo({ markOnly = false }: { markOnly?: boolean }) {
 
 export function OxogLogo() {
   return (
-    <svg viewBox="0 0 200 130" fill="none" aria-hidden="true" className="oxog-symbol">
+    <svg viewBox="0 0 200 130" fill="none" aria-hidden="true" className="oxog-mark oxog-symbol">
       <path
         d="M93 56 72 35C49 13 14 24 9 53 3 84 23 104 46 103"
         stroke="var(--oxog-pink)"
