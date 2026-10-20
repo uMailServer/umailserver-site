@@ -1,4 +1,3 @@
-import '@fontsource-variable/space-grotesk';
 import Link from 'next/link';
 import { Icon, Logo, OxogLogo } from './icons';
 const repo = 'https://github.com/uMailServer/uMailServer';
@@ -21,14 +20,14 @@ export function Footer() {
             </span>
           </div>
           <div>
-            <h3>Explore</h3>
+            <h2>Explore</h2>
             <Link href="/#features">Features</Link>
             <Link href="/docs/architecture/">Architecture</Link>
             <Link href="/docs/security/">Security</Link>
             <Link href="/brand/">Brand assets</Link>
           </div>
           <div>
-            <h3>Build</h3>
+            <h2>Build</h2>
             <Link href="/docs/getting-started/">Quick start</Link>
             <Link href="/docs/deployment/">Deployment</Link>
             <a href={`${repo}/blob/main/umailserver.yaml.example`}>
@@ -39,7 +38,7 @@ export function Footer() {
             </a>
           </div>
           <div>
-            <h3>Open source</h3>
+            <h2>Open source</h2>
             <a href={repo}>
               GitHub <Icon name="external" size={12} />
             </a>

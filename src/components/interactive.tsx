@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { Icon, Logo } from './icons';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { AnimationToggle } from './animation-control';
 
 type Theme = 'light' | 'dark' | 'system';
@@ -41,6 +42,7 @@ export function Header() {
   const picker = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const mobileMenu = useRef<HTMLElement>(null);
   const themeId = useId();
   useEffect(() => {
     if (!open) return;
@@ -63,6 +65,35 @@ export function Header() {
       document.removeEventListener('keydown', escape);
     };
   }, [open]);
+  useEffect(() => {
+    if (!mobile) return;
+    const breakpoint = window.matchMedia('(max-width: 820px)');
+    const dismiss = (event: PointerEvent | FocusEvent) => {
+      const target = event.target as Node;
+      if (!mobileMenu.current?.contains(target) && !menuButton.current?.contains(target))
+        setMobile(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobile(false);
+        menuButton.current?.focus();
+      }
+    };
+    const resize = () => {
+      if (!breakpoint.matches) setMobile(false);
+    };
+    mobileMenu.current?.querySelector<HTMLAnchorElement>('a')?.focus();
+    document.addEventListener('keydown', escape);
+    document.addEventListener('pointerdown', dismiss);
+    document.addEventListener('focusin', dismiss);
+    breakpoint.addEventListener('change', resize);
+    return () => {
+      document.removeEventListener('keydown', escape);
+      document.removeEventListener('pointerdown', dismiss);
+      document.removeEventListener('focusin', dismiss);
+      breakpoint.removeEventListener('change', resize);
+    };
+  }, [mobile]);
   function choose(value: Theme) {
     applyTheme(value);
     try {
@@ -91,7 +122,10 @@ export function Header() {
               aria-expanded={open}
               aria-haspopup="dialog"
               aria-controls={themeId}
-              onClick={() => setOpen(!open)}
+              onClick={() => {
+                setMobile(false);
+                setOpen(!open);
+              }}
             >
               <Icon name={themeIcon[theme]} size={17} />
               <span>{themeLabel}</span>
@@ -157,7 +191,10 @@ export function Header() {
             aria-label={mobile ? 'Close navigation' : 'Open navigation'}
             aria-expanded={mobile}
             aria-controls="mobile-navigation"
-            onClick={() => setMobile(!mobile)}
+            onClick={() => {
+              setOpen(false);
+              setMobile(!mobile);
+            }}
           >
             <Icon name={mobile ? 'close' : 'menu'} />
           </button>
@@ -165,14 +202,9 @@ export function Header() {
         {mobile && (
           <nav
             className="mobile-nav"
+            ref={mobileMenu}
             id="mobile-navigation"
             aria-label="Mobile navigation"
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                setMobile(false);
-                menuButton.current?.focus();
-              }
-            }}
           >
             {[
               ['Why uMailServer', '/#features'],
@@ -278,11 +310,13 @@ export function InstallTabs() {
           <small>{current.file}</small>
           <CopyButton text={current.code} />
         </div>
-        <pre>
+        <pre tabIndex={0}>
           <code>
             {current.code.split('\n').map((line, i) => (
               <span className={line.startsWith('#') ? 'code-comment' : ''} key={i}>
-                <span className="line-number">{String(i + 1).padStart(2, '0')}</span>
+                <span className="line-number" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
                 {line}
                 <br />
               </span>
@@ -299,6 +333,7 @@ export function InstallTabs() {
 }
 
 export function MotionObserver() {
+  const pathname = usePathname();
   useEffect(() => {
     if (!('IntersectionObserver' in window)) return;
     const logos = document.querySelectorAll<SVGElement>('.oxog-symbol');
@@ -344,6 +379,6 @@ export function MotionObserver() {
         delete logo.dataset.motion;
       });
     };
-  }, []);
+  }, [pathname]);
   return null;
 }

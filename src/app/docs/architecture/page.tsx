@@ -14,7 +14,7 @@ export default function Architecture() {
       intro="A connected mail stack inside one Go executable. Protocol servers, message processing and local storage share the same runtime."
       path="/docs/architecture/"
     >
-      <Pipeline />
+      <Pipeline headingLevel={2} />
       <section>
         <h2>Incoming mail</h2>
         <p>

@@ -45,7 +45,12 @@ export default function Deployment() {
       </section>
       <section>
         <h2>Know which doors are open</h2>
-        <div className="table-scroll">
+        <div
+          className="table-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label="Server ports and deployment notes"
+        >
           <table>
             <thead>
               <tr>

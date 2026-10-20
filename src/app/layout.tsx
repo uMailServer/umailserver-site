@@ -1,10 +1,24 @@
 import type { Metadata } from 'next';
-import '@fontsource-variable/manrope';
-import '@fontsource/ibm-plex-mono/400.css';
+import localFont from 'next/font/local';
 import './globals.css';
 import { Header, MotionObserver } from '@/components/interactive';
 import { Footer } from '@/components/footer';
 import { SiteBackground } from '@/components/site-background';
+
+const spaceGrotesk = localFont({
+  src: './fonts/spacegrotesk.woff2',
+  variable: '--font-space-grotesk',
+  weight: '300 700',
+  display: 'swap',
+  adjustFontFallback: 'Arial',
+});
+const jetbrainsMono = localFont({
+  src: './fonts/jetbrainsmono.woff2',
+  variable: '--font-jetbrains',
+  weight: '100 800',
+  display: 'swap',
+  adjustFontFallback: 'Arial',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://umailserver.com'),
@@ -36,7 +50,11 @@ export const metadata: Metadata = {
 const themeScript = `(function(){try{var t=localStorage.getItem('umail-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}})()`;
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

@@ -30,7 +30,7 @@ npm run preview
 
 Preview: http://127.0.0.1:4173. Set `PORT` to use a different free port (for example, `$env:PORT='4185'; npm run preview` in PowerShell). `scripts/serve.mjs` serves the actual `out/` files, including nested routes and a real 404 response. It is a development preview, not a production server.
 
-`check:export` checks every HTML file for a title, a single h1 and local link/asset targets, then verifies canonical URLs, descriptions, robots, sitemap, CNAME, social assets and `.nojekyll`.
+`check:export` checks every HTML file for a title, a single h1/main, sequential heading levels, a focusable skip target/code blocks and local link/asset targets, then verifies canonical URLs, descriptions, robots, sitemap, CNAME, social assets and `.nojekyll`.
 
 ## Layout and content
 
@@ -48,7 +48,7 @@ Preview: http://127.0.0.1:4173. Set `PORT` to use a different free port (for exa
 
 The web UI illustration is explicitly conceptual. It is not a screenshot. No testimonial, benchmark, customer count or delivery guarantee is presented.
 
-The theme picker follows CobaltDB's three interface previews, native Light/Dark/System radio controls, selected checkmark, status copy and keyboard/focus behavior. The Oxog studio card matches MammothEngine's single “Small studio. Big ideas.” link, four-path SVG, scoped light/dark colors, Space Grotesk heading, spacing and responsive breakpoints. The extra studio description, wordmark and project tiles are removed. Its logo repeats the reference's six-second drawing cycle, completing each stroke by 33%, with 0/.15/.3/.45-second path delays. Viewport and document visibility pause the CSS animation; reduced motion leaves the complete static logo. This logo remains independent of the mouse-effects toggle. The added font is pinned at version 5.3.0 and its OFL license is distributed in `public/licenses/space-grotesk-OFL.txt`. Reduced-motion CSS disables decorative motion, transitions and smooth scrolling; content and the complete logo remain available without JavaScript.
+The theme picker follows CobaltDB's three interface previews, native Light/Dark/System radio controls, selected checkmark, status copy and keyboard/focus behavior. The Oxog studio card matches MammothEngine's single “Small studio. Big ideas.” link, four-path SVG, scoped light/dark colors, Space Grotesk heading, spacing and responsive breakpoints. The extra studio description, wordmark and project tiles are removed. Its logo repeats the reference's six-second drawing cycle, completing each stroke by 33%, with 0/.15/.3/.45-second path delays. Viewport and document visibility pause the CSS animation; reduced motion leaves the complete static logo. This logo remains independent of the mouse-effects toggle. Space Grotesk and JetBrains Mono are bundled as variable WOFF2 files through `next/font/local`, with swap loading, metric-adjusted fallbacks and OFL licenses in `public/licenses/`. Space Grotesk is the main interface font; JetBrains Mono is reserved for technical text. Both include Turkish glyphs. Quicksand has no justified role and is not downloaded. Reduced-motion CSS disables decorative motion, transitions and smooth scrolling; content and the complete logo remain available without JavaScript.
 
 ## Site-wide SVG background
 

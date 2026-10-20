@@ -192,7 +192,8 @@ export function MailDiagram() {
   );
 }
 
-export function Pipeline() {
+export function Pipeline({ headingLevel = 3 }: { headingLevel?: 2 | 3 }) {
+  const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const nodes = [
     ['01', 'Receive', 'SMTP · port 25', 'M10 17h24v18H10zM10 18l12 9 12-9'],
     [
@@ -238,7 +239,7 @@ export function Pipeline() {
               </div>
             )}
           </div>
-          <h3>{title}</h3>
+          <Heading className="pipeline-heading">{title}</Heading>
           <p>{sub}</p>
         </div>
       ))}

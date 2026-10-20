@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 export default function Brand() {
   return (
-    <main id="main" className="container brand-page">
+    <main tabIndex={-1} id="main" className="container brand-page">
       <p className="eyebrow">A LITTLE MARK. A COMPLETE IDENTITY.</p>
       <h1>Made to be recognized.</h1>
       <p>

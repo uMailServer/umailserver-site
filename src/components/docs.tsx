@@ -22,7 +22,7 @@ export function DocsShell({
   children: React.ReactNode;
 }) {
   return (
-    <main id="main" className="container docs-layout">
+    <main tabIndex={-1} id="main" className="container docs-layout">
       <aside className="docs-sidebar">
         <span className="eyebrow">THE FIELD GUIDE</span>
         <nav aria-label="Documentation">
@@ -69,7 +69,7 @@ export function CodeBlock({ code, label = 'terminal' }: { code: string; label?: 
         <span>{label}</span>
         <CopyButton text={code} label={`Copy ${label} example`} />
       </div>
-      <pre>
+      <pre tabIndex={0}>
         <code>{code}</code>
       </pre>
     </div>

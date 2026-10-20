@@ -54,7 +54,7 @@ const faqs = [
 
 export default function Home() {
   return (
-    <main id="main">
+    <main tabIndex={-1} id="main">
       <section className="hero-scene">
         <div className="hero container">
           <div className="hero-copy">

@@ -26,6 +26,21 @@ for (const file of htmlFiles) {
   assert.equal((html.match(/<h1(?:\s|>)/g) || []).length, 1, `${file}: expected one h1`);
   assert.match(html, /<title>[^<]+<\/title>/, `${file}: title missing`);
   assert.match(html, /<html[^>]+lang="en"/, `${file}: language missing`);
+  assert.equal((html.match(/<main(?:\s|>)/g) || []).length, 1, `${file}: expected one main`);
+  const main = html.match(/<main\b[^>]*>/)[0];
+  assert.match(main, /\bid="main"/, `${file}: skip target missing`);
+  assert.match(main, /\btabindex="-1"/, `${file}: skip target must accept focus`);
+  let previousHeading = 0;
+  for (const heading of html.matchAll(/<h([1-6])(?:\s|>)/g)) {
+    const level = Number(heading[1]);
+    assert(
+      level <= previousHeading + 1,
+      `${file}: heading level skips from ${previousHeading} to ${level}`,
+    );
+    previousHeading = level;
+  }
+  for (const block of html.matchAll(/<pre\b[^>]*>/g))
+    assert.match(block[0], /tabindex="0"/, `${file}: scrolling code must accept keyboard focus`);
   const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
   for (const m of html.matchAll(/(?:href|src)="([^"\s]+)"/g)) {
     let href = m[1].replaceAll('&amp;', '&');
