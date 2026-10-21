@@ -83,7 +83,14 @@ export default function Architecture() {
         </p>
         <p>
           MCP queue operations are currently placeholders. Use the implemented admin REST API for
-          live queue inspection and retry workflows.
+          live queue inspection and retry workflows: <code>GET /api/v1/admin/queue</code> lists
+          entries and <code>POST /api/v1/admin/queue/&#123;id&#125;</code> requests a retry.
+        </p>
+        <p>
+          Webmail uses dedicated message, flags, draft and move endpoints. Mail lists support
+          pagination and combined <code>flag=flagged</code> / <code>unread=1</code> filters; clients
+          should retain the qualified message IDs returned by the API instead of reconstructing them
+          from content hashes. Signed webhooks use a persistent registry and retry backoff.
         </p>
         <p>
           Read the <SourceLink file="docs/ARCHITECTURE.md">upstream architecture</SourceLink>,{' '}

@@ -8,6 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     'docs/architecture/',
     'docs/deployment/',
     'docs/security/',
+    'docs/changelog/',
     'brand/',
   ].map((path) => ({
     url: `https://umailserver.com/${path}`,

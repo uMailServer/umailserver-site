@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { DocsShell, Callout, CodeBlock, SourceLink } from '@/components/docs';
+import { sourceCheckout } from '@/lib/product';
 export const metadata: Metadata = {
   title: 'Getting started',
   description:
@@ -38,15 +39,15 @@ export default function GettingStarted() {
       </section>
       <section>
         <h2>02 / Build the engine</h2>
-        <CodeBlock
-          code={
-            'git clone https://github.com/uMailServer/uMailServer.git\ncd uMailServer\nmake build'
-          }
-        />
+        <CodeBlock code={`${sourceCheckout}\nmake build`} />
         <p>
           The <SourceLink file="Makefile">upstream Makefile</SourceLink> builds webmail, admin and
           account frontends, then compiles the Go binary. Review the upstream build instructions if
           your platform needs a different shell or toolchain.
+        </p>
+        <p>
+          These commands pin the source snapshot used by this guide. Review the{' '}
+          <Link href="/docs/changelog/">latest changes</Link> before selecting a different revision.
         </p>
       </section>
       <section>
@@ -74,6 +75,12 @@ export default function GettingStarted() {
           addresses and port access, configure mail TLS and put the public web interface behind an
           HTTPS reverse proxy.
         </p>
+        <p>
+          An explicitly supplied config path must exist. Relative data, certificate and database
+          paths resolve from the config file’s directory. Unknown YAML keys are logged and ignored
+          during normal loading, but <code>config check</code> rejects them; run it before
+          deployment.
+        </p>
         <Callout title="The web port is not HTTPS on its own">
           The current HTTP server uses a plain HTTP listener, even when the configured port is 443.
           The loopback admin endpoint defaults to http://127.0.0.1:8443. Follow the deployment guide
@@ -82,11 +89,7 @@ export default function GettingStarted() {
       </section>
       <section>
         <h2>Prefer containers?</h2>
-        <CodeBlock
-          code={
-            'git clone https://github.com/uMailServer/uMailServer.git\ncd uMailServer\ndocker build -t umailserver:local .'
-          }
-        />
+        <CodeBlock code={`${sourceCheckout}\ndocker build -t umailserver:local .`} />
         <p>
           The <SourceLink file="Dockerfile">Dockerfile</SourceLink> builds the embedded frontends
           and executable in a multi-stage image. Use the{' '}

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { DocsShell, Callout, SourceLink } from '@/components/docs';
+import { productStatus } from '@/lib/product';
 export const metadata: Metadata = {
   title: 'Security & scope',
   description:
@@ -13,7 +14,7 @@ export default function Security() {
       intro="Useful security starts with knowing what the implementation does, what you configure and what is still taking shape."
       path="/docs/security/"
     >
-      <Callout title="Current status: v0.1.0 beta">
+      <Callout title={`Current status: ${productStatus}`}>
         Evaluate delivery, authentication, access controls and recovery in your own environment. A
         feature list is not a security certification or a guarantee of deliverability.
       </Callout>
@@ -33,13 +34,28 @@ export default function Security() {
         <h2>Account access</h2>
         <p>
           The implementation includes bcrypt password hashing, JWT-based API authentication, TOTP
-          two-factor support and optional LDAP / Active Directory integration. Per-IP and per-user
-          rate limiting is available for relevant services.
+          two-factor support and optional LDAP / Active Directory integration. API password hashing
+          can also be configured for Argon2id. Login lockouts cover SMTP, IMAP, POP3, ManageSieve,
+          CalDAV/CardDAV and REST access; TOTP attempts are limited. Session revocation and expiring
+          tokens protect API access.
         </p>
         <p>
           Keep admin access restricted, protect signing keys and integration tokens, and review each
           service’s bind address. MCP defaults to loopback; external binding requires an explicit
           token and privileged operations require an admin token.
+        </p>
+      </section>
+      <section>
+        <h2>Outbound transport policy</h2>
+        <p>
+          Outbound MTA-STS enforcement refuses plaintext fallback when a destination’s enforce
+          policy requires TLS. DANE/TLSA remains advisory in the stock server: it has no
+          validating-resolver hook, and unvalidated DNS records are not treated as authenticated
+          transport policy.
+        </p>
+        <p>
+          See the <SourceLink file="docs/SECURITY.md">upstream security policy</SourceLink> for the
+          distinction between enforced MTA-STS and advisory DANE.
         </p>
       </section>
       <section>

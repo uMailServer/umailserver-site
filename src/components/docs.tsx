@@ -1,14 +1,15 @@
 import Link from 'next/link';
 import { Icon } from './icons';
 import { CopyButton } from './interactive';
-export const productRepo = 'https://github.com/uMailServer/uMailServer';
-export const productRevision = 'cc09145f03e150bb6218cf8c32abf3b4675176dd';
+import { productRepo, productRevision, productCheckedOn } from '@/lib/product';
+export { productRepo, productRevision } from '@/lib/product';
 export const docsNav = [
   ['Overview', '/docs/'],
   ['Getting started', '/docs/getting-started/'],
   ['Architecture', '/docs/architecture/'],
   ['Deployment', '/docs/deployment/'],
   ['Security & scope', '/docs/security/'],
+  ['Changelog', '/docs/changelog/'],
 ];
 export function DocsShell({
   title,
@@ -55,8 +56,9 @@ export function DocsShell({
         {children}
         <div className="docs-source">
           Content checked against product source{' '}
-          <a href={`${productRepo}/tree/${productRevision}`}>{productRevision.slice(0, 7)}</a> on 18
-          October 2026. Commands are source-verified; this site does not certify a mail deployment.
+          <a href={`${productRepo}/tree/${productRevision}`}>{productRevision.slice(0, 7)}</a> on{' '}
+          {productCheckedOn}. Commands are source-verified; this site does not certify a mail
+          deployment.
         </div>
       </article>
     </main>

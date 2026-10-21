@@ -122,3 +122,10 @@ DNS provider access is still outside this task. README retains the standard DNS 
 - Limits: native 200% browser zoom, physical touch/virtual keyboard, screen-reader announcements, OS reduced-motion/hidden-tab emulation and lab CLS/Core Web Vitals measurement were unavailable or not run. 320px reflow was tested directly. This is a scoped design/accessibility check, not a claim of complete WCAG compliance or zero defects.
 
 - Final project checks passed: clean npm ci (29 packages; audit reported zero vulnerabilities), formatting, TypeScript, 26 native tests with zero skips/failures, production build and export validation (10 HTML files, 315 internal links/assets).
+
+## Product changelog refresh · 22 October 2026
+
+- Upstream snapshot: a3e6809f96003ef9dcd3aea1ef2277bc1461201b. GitHub releases/tags are empty; latest release returns 404. The README still says v0.1.0 beta and recent changelog work is Unreleased. Source code was checked before promoting claims; startup config discovery is not misrepresented as a universally mandatory explicit flag.
+- Updated home features/FAQ and the getting-started, architecture, deployment and security guides; added a source-linked changelog route, documentation card/navigation and sitemap entry. Source build/Docker examples pin the checked revision. All literal SourceLink targets exist in that upstream tree.
+- Production-browser checks passed for the seven changed routes at 320/1440px in both themes (28 cases): no horizontal overflow, clipped headings/controls, eligible sampled contrast failures or undersized sampled controls. The home badge opens the changelog and its source note shows the correct date/revision. Desktop screenshot reviewed; exercised console warning/error log was empty.
+- Formatting, TypeScript, 26 tests (zero skipped/failed), production build and export validation passed: 11 HTML files and 362 internal links/assets. No animation or design-system changes were needed. Upstream mail deployment, mail delivery and upstream tests were not executed; this update verifies website content/rendering rather than certifying the product.

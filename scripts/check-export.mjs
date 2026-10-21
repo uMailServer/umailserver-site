@@ -74,6 +74,7 @@ for (const p of [
   'docs/architecture/',
   'docs/deployment/',
   'docs/security/',
+  'docs/changelog/',
   'brand/',
 ]) {
   const html = await readFile(path.join(root, p, 'index.html'), 'utf8');

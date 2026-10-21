@@ -94,6 +94,11 @@ export default function Deployment() {
           the actual network boundary.
         </Callout>
         <p>
+          Forwarded client IP headers are trusted only from peers listed in{' '}
+          <code>http.trusted_proxies</code>. Restrict that list to your actual proxy addresses;
+          arbitrary client-supplied headers must not become the audit identity.
+        </p>
+        <p>
           See the{' '}
           <SourceLink file="umailserver.yaml.example">complete configuration example</SourceLink>{' '}
           and{' '}
@@ -133,6 +138,12 @@ export default function Deployment() {
           Back up data and configuration, build the intended source revision, stop the old process
           and replace the executable. Restart after configuration changes: SIGHUP only rechecks
           manually managed TLS certificates.
+        </p>
+        <p>
+          A binary refuses databases written by a newer schema version; do not downgrade against the
+          same data files. CLI backups require a stopped server. Restore extracts into{' '}
+          <code>restore_temp/</code>; inspect the result and follow the runbook before moving data
+          into service.
         </p>
         <p>
           Consult the <SourceLink file="docs/DEPLOYMENT.md">deployment guide</SourceLink> and{' '}

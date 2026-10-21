@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { DocsShell, Callout } from '@/components/docs';
 import { Icon } from '@/components/icons';
+import { productStatus } from '@/lib/product';
 export const metadata: Metadata = {
   title: 'Documentation',
   description:
@@ -16,8 +17,9 @@ export default function Docs() {
       path="/docs/"
     >
       <Callout title="An open project, still taking shape">
-        uMailServer is currently v0.1.0 beta. Read the scope and deployment notes before running a
-        server that handles important email.
+        uMailServer is currently {productStatus}. New work is documented as Unreleased, with no
+        published GitHub release binaries. Read the <Link href="/docs/changelog/">changelog</Link>,
+        scope and deployment notes before running a server that handles important email.
       </Callout>
       <div className="doc-cards">
         {[
@@ -44,6 +46,12 @@ export default function Docs() {
             'Security & scope',
             'Understand TLS, authentication, filtering and the current implementation boundaries.',
             'security',
+          ],
+          [
+            'book',
+            'Changelog',
+            'Recent mail, API, security and operator changes, with the source snapshot clearly identified.',
+            'changelog',
           ],
         ].map(([icon, title, body, slug]) => (
           <Link className="doc-card" key={slug} href={`/docs/${slug}/`}>

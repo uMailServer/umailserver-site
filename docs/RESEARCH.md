@@ -1,6 +1,14 @@
 # Research and content decisions
 
-Checked on 18 October 2026 against product revision [`cc09145f03e150bb6218cf8c32abf3b4675176dd`](https://github.com/uMailServer/uMailServer/tree/cc09145f03e150bb6218cf8c32abf3b4675176dd).
+Current content checked on 22 October 2026 against product revision [`a3e6809f96003ef9dcd3aea1ef2277bc1461201b`](https://github.com/uMailServer/uMailServer/tree/a3e6809f96003ef9dcd3aea1ef2277bc1461201b). The initial research below was recorded on 18 October; this refresh supersedes its product snapshot.
+
+## Changelog refresh · 22 October 2026
+
+- GitHub releases and tags are still empty; latest-release API returns 404. The README identifies v0.1.0 beta. The changelog's newest entries are Unreleased (audit rounds 141–220 plus tracing/cache metrics), not a newly published release. No binary download or new version is advertised.
+- `src/lib/product.ts` centralizes the checked revision, date, status and pinned checkout. Home links to `/docs/changelog/`; documentation navigation, overview and sitemap expose the new guide.
+- Changes were cross-checked with `cmd/umailserver/main.go` / `helpers.go`, config loading/defaults, `internal/api/password.go`, `internal/db/db.go`, `internal/mcp/server.go`, `internal/server/server_stop.go`, current API/security docs and the README's known limitations. Build prerequisites, protocol ports, AGPL license, HTTP proxy boundary and incomplete UI/MCP features remain accurate.
+- Source takes precedence over stale changelog prose: `serve` can discover config or start the first-run wizard when no explicit path is supplied. An explicit missing path fails. Normal config loading logs/ignores unknown keys; `config check` rejects them. The website recommends an explicit validated file without claiming it is mandatory in every startup mode.
+- Added operator guidance for MTA-STS versus advisory DANE, API pagination/filters/qualified IDs and error handling, trusted proxy audit IPs, schema downgrade refusal and staged restore. Source checkouts are pinned to the revision used for these claims. No actual mail server deployment or upstream test suite was run.
 
 ## Primary product sources
 

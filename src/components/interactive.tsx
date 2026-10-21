@@ -5,6 +5,7 @@ import { Icon, Logo } from './icons';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AnimationToggle } from './animation-control';
+import { sourceCheckout } from '@/lib/product';
 
 type Theme = 'light' | 'dark' | 'system';
 const themeIcon = { light: 'sun', dark: 'moon', system: 'monitor' };
@@ -260,13 +261,13 @@ const snippets = {
   source: {
     label: 'Build from source',
     file: 'terminal',
-    code: 'git clone https://github.com/uMailServer/uMailServer.git\ncd uMailServer\nmake build\nsudo ./umailserver quickstart admin@example.com\nsudo ./umailserver serve --config /etc/umailserver/umailserver.yaml',
+    code: `${sourceCheckout}\nmake build\nsudo ./umailserver quickstart admin@example.com\nsudo ./umailserver serve --config /etc/umailserver/umailserver.yaml`,
     note: 'Linux / macOS · Go 1.25+, Node.js 20+, npm and make. Review the generated configuration before starting.',
   },
   docker: {
     label: 'Docker',
     file: 'terminal',
-    code: 'git clone https://github.com/uMailServer/uMailServer.git\ncd uMailServer\ndocker build -t umailserver:local .\n# Review the production Compose configuration first:\ncat deploy/docker/production/docker-compose.yml',
+    code: `${sourceCheckout}\ndocker build -t umailserver:local .\n# Review the production Compose configuration first:\ncat deploy/docker/production/docker-compose.yml`,
     note: 'Build the image locally. The production Compose example also includes a TLS reverse proxy; review its volumes, secrets and ports before use.',
   },
 };

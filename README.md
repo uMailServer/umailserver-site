@@ -36,6 +36,8 @@ Preview: http://127.0.0.1:4173. Set `PORT` to use a different free port (for exa
 
 - `src/app/page.tsx`: product landing page.
 - `src/app/docs/`: overview, quick start, architecture, deployment, security and current limitations.
+- `src/app/docs/changelog/`: Unreleased product changes and operator implications.
+- `src/lib/product.ts`: product status, checked source revision/date and reproducible checkout commands.
 - `src/app/brand/`: downloadable SVG identity.
 - `src/components/`: shared identity, diagrams, navigation, theme picker, copy buttons and installation tabs.
 - `src/components/site-background.tsx`: reusable, site-wide SVG field and reaction layers with global input/lifecycle handling.

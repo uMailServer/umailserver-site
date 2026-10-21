@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Icon, StepLabel } from '@/components/icons';
 import { MailDiagram, Pipeline } from '@/components/mail-diagram';
 import { CopyButton, InstallTabs } from '@/components/interactive';
+import { productStatus } from '@/lib/product';
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 const repo = 'https://github.com/uMailServer/uMailServer';
 const features = [
@@ -15,20 +16,20 @@ const features = [
   [
     'shield',
     'A thoughtful first line.',
-    'SPF, DKIM, DMARC and ARC, alongside Bayesian filtering, greylisting and RBL checks.',
+    'SPF, DKIM, DMARC and ARC, alongside Bayesian filtering, greylisting, cached RBL checks and outbound MTA-STS enforcement.',
     'LAYERED SPAM PROTECTION',
   ],
   [
     'code',
     'Built to work with you.',
-    'A REST API, webhooks and an MCP server for domain and account workflows. Make mail part of your tooling.',
+    'A REST API, signed event webhooks and an MCP server for domain and account workflows. Make mail part of your tooling.',
     'REST · WEBHOOKS · MCP',
   ],
 ];
 const faqs = [
   [
     'Is uMailServer ready for my production server?',
-    'The project is currently v0.1.0 beta. Evaluate it in a controlled environment, review the documented limitations and test backup and delivery workflows before relying on it for important mail.',
+    `The project is currently ${productStatus}, with ongoing changes in the Unreleased changelog and no published GitHub release binaries. Evaluate it in a controlled environment and test backup and delivery workflows before relying on it for important mail.`,
   ],
   [
     'Can I use my existing email client?',
@@ -58,12 +59,13 @@ export default function Home() {
       <section className="hero-scene">
         <div className="hero container">
           <div className="hero-copy">
-            <a className="release-pill" href={`${repo}#readme`}>
+            <Link className="release-pill" href="/docs/changelog/">
               <span className="status-dot" />
-              <span>v0.1.0 beta</span>
-              <span className="pill-divider" />A fresh take on self-hosted mail
+              <span>{productStatus}</span>
+              <span className="pill-divider" />
+              See the latest changes
               <Icon name="arrow" size={14} />
-            </a>
+            </Link>
             <h1>
               One binary.
               <br />
